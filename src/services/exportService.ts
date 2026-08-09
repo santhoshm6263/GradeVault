@@ -39,7 +39,6 @@ export const exportToExcel = (semesters: Semester[], profile: UserProfile | null
       'Subject Name': '',
       'Credits': '',
       'Grade': '',
-      'Grade Point': '',
       'Earned Credit': '',
       'Semester SGPA': sem.sgpa.toFixed(2)
     });
@@ -51,7 +50,6 @@ export const exportToExcel = (semesters: Semester[], profile: UserProfile | null
         'Subject Name': sub.subjectName,
         'Credits': sub.credits,
         'Grade': sub.grade || 'N/A',
-        'Grade Point': sub.grade ? sub.gradePoint : 'N/A',
         'Earned Credit': sub.grade ? sub.earnedCredit : 'N/A',
         'Semester SGPA': ''
       });
@@ -96,7 +94,6 @@ export const printTranscript = (semesters: Semester[], profile: UserProfile | nu
             <th style="text-align: left;">Subject Name</th>
             <th style="width: 10%; text-align: center;">Credits</th>
             <th style="width: 10%; text-align: center;">Grade</th>
-            <th style="width: 12%; text-align: center;">Grade Point</th>
             <th style="width: 12%; text-align: center;">Earned Credit</th>
           </tr>
         </thead>
@@ -107,7 +104,6 @@ export const printTranscript = (semesters: Semester[], profile: UserProfile | nu
               <td>${sub.subjectName}</td>
               <td style="text-align: center;">${sub.credits}</td>
               <td style="text-align: center; font-weight: bold;">${sub.grade || '-'}</td>
-              <td style="text-align: center;">${sub.grade ? sub.gradePoint : '-'}</td>
               <td style="text-align: center;">${sub.grade ? sub.earnedCredit : '-'}</td>
             </tr>
           `).join('')}

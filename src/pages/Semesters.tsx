@@ -189,7 +189,6 @@ export const Semesters: React.FC = () => {
                 )}
                 <th className="px-6 py-4 text-center">Credits</th>
                 <th className="px-6 py-4">Grade</th>
-                <th className="px-6 py-4 text-center">Grade Point</th>
                 <th className="px-6 py-4 text-center">Earned Credit</th>
               </tr>
             </thead>
@@ -318,10 +317,7 @@ export const Semesters: React.FC = () => {
                       </select>
                     </td>
 
-                    {/* Grade Point */}
-                    <td className="px-6 py-4 text-center font-bold text-sm">
-                      {sub.grade ? sub.gradePoint : '-'}
-                    </td>
+
 
                     {/* Earned Credit */}
                     <td className="px-6 py-4 text-center text-sm font-semibold">

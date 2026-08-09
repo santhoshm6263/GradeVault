@@ -6,15 +6,16 @@ export const JNTUA_R23_CSE_SYLLABUS: Semester[] = [
     sgpa: 0,
     earnedCredits: 0,
     subjects: [
-      { courseCode: '23A52101T', subjectName: 'Communicative English', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0 },
+      { courseCode: '23A52201T', subjectName: 'Communicative English', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0 },
+      { courseCode: '23A51202T', subjectName: 'Chemistry', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0 },
       { courseCode: '23A54101', subjectName: 'Linear Algebra & Calculus', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0 },
-      { courseCode: '23A51101T', subjectName: 'Chemistry', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0 },
       { courseCode: '23A01201T', subjectName: 'Basic Civil & Mechanical Engineering', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0 },
       { courseCode: '23A05101T', subjectName: 'Introduction to Programming', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0 },
-      { courseCode: '23A52101P', subjectName: 'Communicative English Lab', credits: 1, grade: '', gradePoint: 0, earnedCredit: 0 },
-      { courseCode: '23A51101P', subjectName: 'Chemistry Lab', credits: 1, grade: '', gradePoint: 0, earnedCredit: 0 },
+      { courseCode: '23A52201P', subjectName: 'Communicative English Lab', credits: 1, grade: '', gradePoint: 0, earnedCredit: 0 },
+      { courseCode: '23A51202P', subjectName: 'Chemistry Lab', credits: 1, grade: '', gradePoint: 0, earnedCredit: 0 },
+      { courseCode: '23A03201', subjectName: 'Engineering Workshop', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0 },
       { courseCode: '23A05101P', subjectName: 'Computer Programming Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0 },
-      { courseCode: '23A03101P', subjectName: 'Engineering Workshop', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0 }
+      { courseCode: '23A99201', subjectName: 'Health and wellness, Yoga and Sports', credits: 0.5, grade: '', gradePoint: 0, earnedCredit: 0 }
     ]
   },
   {
@@ -22,15 +23,16 @@ export const JNTUA_R23_CSE_SYLLABUS: Semester[] = [
     sgpa: 0,
     earnedCredits: 0,
     subjects: [
+      { courseCode: '23A56101T', subjectName: 'Engineering Physics', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
       { courseCode: '23A54201', subjectName: 'Differential Equations & Vector Calculus', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A51201T', subjectName: 'Engineering Physics', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A02201T', subjectName: 'Basic Electrical & Electronics Engineering', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A03201T', subjectName: 'Engineering Graphics', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A02101T', subjectName: 'Basic Electrical & Electronics Engineering', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A03101T', subjectName: 'Engineering Graphics', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05102', subjectName: 'IT Workshop', credits: 1, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
       { courseCode: '23A05201T', subjectName: 'Data Structures', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A51201P', subjectName: 'Engineering Physics Lab', credits: 1, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A02201P', subjectName: 'Electrical & Electronics Engineering Workshop', credits: 1, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A56101P', subjectName: 'Engineering Physics Lab', credits: 1, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A02101P', subjectName: 'Electrical & Electronics Engineering Workshop', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
       { courseCode: '23A05201P', subjectName: 'Data Structures Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05202P', subjectName: 'IT Workshop', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
+      { courseCode: '23A99101', subjectName: 'NSS/NCC/Scouts & Guides/Community Service', credits: 0.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
     ]
   },
   {
@@ -38,15 +40,15 @@ export const JNTUA_R23_CSE_SYLLABUS: Semester[] = [
     sgpa: 0,
     earnedCredits: 0,
     subjects: [
-      { courseCode: '23A54304', subjectName: 'Discrete Mathematics & Graph Theory', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05301T', subjectName: 'Digital Logic & Computer Organization', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05302T', subjectName: 'Advanced Data Structures', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05303T', subjectName: 'Object Oriented Programming through Java', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05304T', subjectName: 'Computer Architecture', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05301P', subjectName: 'Digital Logic & Computer Organization Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05302P', subjectName: 'Advanced Data Structures Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05303P', subjectName: 'Java Programming Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A99201', subjectName: 'Universal Human Values', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
+      { courseCode: '23A54301', subjectName: 'Discrete Mathematics & Graph Theory', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A52301', subjectName: 'Universal Human Values 2- Understanding Harmony and Ethical human conduct', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A30402', subjectName: 'Digital Logic and Computer Organization', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05302T', subjectName: 'Advanced Data Structures & Algorithms Analysis', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05303T', subjectName: 'Object-Oriented Programming Through JAVA', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05302P', subjectName: 'Advanced Data Structures and Algorithms Analysis Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05303P', subjectName: 'Object-Oriented Programming Through JAVA Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05304', subjectName: 'Python programming', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A99301', subjectName: 'Environmental Science', credits: 0, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
     ]
   },
   {
@@ -54,14 +56,15 @@ export const JNTUA_R23_CSE_SYLLABUS: Semester[] = [
     sgpa: 0,
     earnedCredits: 0,
     subjects: [
-      { courseCode: '23A05401T', subjectName: 'Database Management Systems', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05402T', subjectName: 'Operating Systems', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05403T', subjectName: 'Software Engineering', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05404T', subjectName: 'Design & Analysis of Algorithms', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A52402a', subjectName: 'Managerial Economics and Financial Analysis', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
       { courseCode: '23A54401', subjectName: 'Probability & Statistics', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05401P', subjectName: 'Database Management Systems Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05402P', subjectName: 'Operating Systems Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05404P', subjectName: 'Algorithms Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
+      { courseCode: '23A35401T', subjectName: 'Operating Systems', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05402T', subjectName: 'Database Management Systems', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05403', subjectName: 'Software Engineering', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A35401P', subjectName: 'Operating Systems Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05402P', subjectName: 'Database Management Systems Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A52401', subjectName: 'Full Stack Development-1', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A99401', subjectName: 'Design Thinking & Innovation', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
     ]
   },
   {
@@ -69,14 +72,17 @@ export const JNTUA_R23_CSE_SYLLABUS: Semester[] = [
     sgpa: 0,
     earnedCredits: 0,
     subjects: [
-      { courseCode: '23A05501T', subjectName: 'Artificial Intelligence', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05502T', subjectName: 'Computer Networks', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05503T', subjectName: 'Automata Theory & Compiler Design', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05504T', subjectName: 'Professional Elective - I (Data Mining)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A01501', subjectName: 'Construction Technology and Management (Open Elective - I)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05501P', subjectName: 'Artificial Intelligence Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05502P', subjectName: 'Computer Networks Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05505S', subjectName: 'Full Stack Development - II', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
+      { courseCode: '23A31301T', subjectName: 'Artificial Intelligence', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05501T', subjectName: 'Computer Networks & Internet Protocols', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05502', subjectName: 'Automata Theory and Compiler Design', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05503', subjectName: 'Introduction To Quantum Technologies And Applications', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05504a', subjectName: 'Professional Elective-I (Object Oriented Analysis and Design)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A01505a', subjectName: 'Open Elective-I (Green Buildings)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A31301P', subjectName: 'Artificial Intelligence Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05501P', subjectName: 'Computer Networks & Internet Protocols Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05506', subjectName: 'Skill Enhancement course Full Stack Development - II', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A03508', subjectName: 'Tinkering Lab', credits: 1, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05507', subjectName: 'Evaluation of Community Service Internship', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
     ]
   },
   {
@@ -84,14 +90,17 @@ export const JNTUA_R23_CSE_SYLLABUS: Semester[] = [
     sgpa: 0,
     earnedCredits: 0,
     subjects: [
+      { courseCode: '23A31401T', subjectName: 'Machine Learning', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A37501T', subjectName: 'Cloud Computing', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
       { courseCode: '23A05601T', subjectName: 'Cryptography & Network Security', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05602T', subjectName: 'Data Science', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05603T', subjectName: 'Professional Elective - II (Software Project Mgt)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05604T', subjectName: 'Professional Elective - III (Cloud Computing)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A02601', subjectName: 'Sustainability in Engineering Practices (Open Elective - II)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05602a', subjectName: 'Professional Elective-II (Software Testing Methodologies)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05603a', subjectName: 'Professional Elective-III (Software Project Management)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A01606a', subjectName: 'Open Elective - II (Disaster Management)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A31401P', subjectName: 'Machine Learning Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
       { courseCode: '23A05601P', subjectName: 'Cryptography & Network Security Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05602P', subjectName: 'Data Science Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05605S', subjectName: 'Skill Enhancement Course (Design Pattern)', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
+      { courseCode: '23A52501', subjectName: 'Skill Enhancement course Soft skills', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A52601', subjectName: 'Audit Course Technical Paper Writing & IPR', credits: 0, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05604', subjectName: 'Workshop', credits: 0, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
     ]
   },
   {
@@ -99,13 +108,15 @@ export const JNTUA_R23_CSE_SYLLABUS: Semester[] = [
     sgpa: 0,
     earnedCredits: 0,
     subjects: [
-      { courseCode: '23A05701T', subjectName: 'Cloud Computing & Virtualization', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05702T', subjectName: 'Machine Learning', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05703T', subjectName: 'Professional Elective - IV (Devops)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05704T', subjectName: 'Professional Elective - V (Internet of Things)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A03701', subjectName: 'Open Elective - III (Green Energy Systems)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05701P', subjectName: 'Machine Learning Lab', credits: 1.5, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05702P', subjectName: 'Project Phase-I', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
+      { courseCode: '23A30602T', subjectName: 'Deep Learning', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A52701a', subjectName: 'Management Course- II (Business Ethics and Corporate Governance)', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05701a', subjectName: 'Professional Elective-IV (Software Architecture & Design Patterns)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05702a', subjectName: 'Professional Elective-V (Agile Methodologies)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A01704a', subjectName: 'Open Elective-III (Building Materials and Services)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A01705a', subjectName: 'Open Elective-IV (Geo-Spatial Technologies)', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, isElective: true, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05703', subjectName: 'Skill Enhancement Course Prompt Engineering', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A52702', subjectName: 'Audit Course Gender Sensitization', credits: 0, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05704', subjectName: 'Evaluation of Industry Internship', credits: 2, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
     ]
   },
   {
@@ -113,8 +124,8 @@ export const JNTUA_R23_CSE_SYLLABUS: Semester[] = [
     sgpa: 0,
     earnedCredits: 0,
     subjects: [
-      { courseCode: '23A05801D', subjectName: 'Project Phase-II', credits: 8, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
-      { courseCode: '23A05802I', subjectName: 'Full Semester Internship / Seminar', credits: 3, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
+      { courseCode: '23A05801', subjectName: 'Internship', credits: 4, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null },
+      { courseCode: '23A05802', subjectName: 'Project', credits: 8, grade: '', gradePoint: 0, earnedCredit: 0, internalMarks: null, externalMarks: null, totalMarks: null }
     ]
   }
 ];
