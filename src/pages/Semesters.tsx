@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAcademic } from '../context/AcademicContext';
-import { Edit2, Check, X, RefreshCw, AlertCircle, Sparkles } from 'lucide-react';
+import { Edit2, Check, X, RefreshCw, AlertCircle, Sparkles, Upload } from 'lucide-react';
 import { Grade } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import pdfToText from 'react-pdftotext';
 
 export const Semesters: React.FC = () => {
-  const { semesters, updateSubjectGrade, updateSubjectName, updateSubjectCredits, updateSubjectMarks, resetSemester, academicLoading } = useAcademic();
+  const { semesters, updateSubjectGrade, updateSubjectName, updateSubjectCredits, updateSubjectMarks, updateMultipleSubjects, resetSemester, academicLoading } = useAcademic();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Active semester selection (1-8)
@@ -106,6 +107,102 @@ export const Semesters: React.FC = () => {
     }
   };
 
+  const [importing, setImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState<string | null>(null);
+
+  const handlePdfImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    setImportStatus('Extracting text from PDF...');
+
+    try {
+      const text = await pdfToText(file);
+      setImportStatus('Parsing results...');
+
+      const updates: {
+        semesterNumber: number;
+        courseCode: string;
+        grade: Grade;
+        internalMarks: number | null;
+        externalMarks: number | null;
+      }[] = [];
+
+      semesters.forEach(sem => {
+        sem.subjects.forEach(sub => {
+          const startIdx = text.indexOf(sub.courseCode);
+          if (startIdx !== -1) {
+            // Search inside a window of 250 characters after the course code to cover name, marks, and grade
+            const subText = text.substring(startIdx, startIdx + 250);
+
+            let internalMarks: number | null = null;
+            let externalMarks: number | null = null;
+            let grade: Grade = '';
+
+            // JNTUA format: [Internal] [External] [Total] [ResultStatus (P/F)] [Credits] [Grade]
+            // We allow spaces, dashes/slashes, and optional decimals for credits (e.g. 1.5)
+            const match = subText.match(/\b(\d+)\s+([-–—\d]+)\s+(\d+)\s+([PF])\s+(\d+(?:\.\d+)?)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i);
+            
+            if (match) {
+              const valInt = Number(match[1]);
+              const valExt = match[2] === '-' || match[2] === '–' || match[2] === '—' ? 0 : Number(match[2]);
+              const valTot = Number(match[3]);
+
+              // Validate standard JNTUA marks boundaries to filter out headers, dates, and pincodes
+              if (valInt <= 100 && valExt <= 100 && valTot <= 100 && valTot >= valInt && Math.abs(valTot - (valInt + valExt)) <= 1) {
+                internalMarks = valInt;
+                externalMarks = match[2] === '-' || match[2] === '–' || match[2] === '—' ? null : valExt;
+                grade = match[6].toUpperCase() as Grade;
+              }
+            }
+
+            // Fallback: match just the Grade symbol if no JNTUA results pattern matched
+            if (!grade) {
+              const matchG = subText.match(/\b(S|A|B|C|D|E|F|Ab|Y)\b/i);
+              if (matchG) {
+                grade = matchG[1].toUpperCase() as Grade;
+              }
+            }
+
+            if (grade) {
+              updates.push({
+                semesterNumber: sem.semesterNumber,
+                courseCode: sub.courseCode,
+                grade,
+                internalMarks,
+                externalMarks
+              });
+            }
+          }
+        });
+      });
+
+      if (updates.length > 0) {
+        setImportStatus(`Importing ${updates.length} subjects...`);
+        await updateMultipleSubjects(updates);
+        
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.6 }
+        });
+        
+        alert(`Successfully imported results for ${updates.length} subjects!`);
+      } else {
+        alert('Could not find any matching JNTUA R23 course codes in the uploaded PDF. Please make sure this is a valid results sheet.');
+      }
+
+    } catch (err: any) {
+      console.error('PDF Import error:', err);
+      alert('Failed to parse the PDF file. Please try again with a clean PDF.');
+    } finally {
+      setImporting(false);
+      setImportStatus(null);
+      e.target.value = '';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Semester Header Card */}
@@ -137,6 +234,21 @@ export const Semesters: React.FC = () => {
             </span>
           </div>
           <div className="w-[1px] h-8 bg-slate-200 dark:bg-darkBorder/50" />
+          <label className="btn-secondary px-3 py-2 cursor-pointer text-xs flex items-center gap-1.5" title="Import Results PDF">
+            {importing ? (
+              <span className="w-3.5 h-3.5 border-2 border-primary border-t-transparent animate-spin rounded-full" />
+            ) : (
+              <Upload className="w-3.5 h-3.5" />
+            )}
+            {importing ? importStatus || 'Importing...' : 'Import PDF'}
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={handlePdfImport}
+              className="hidden"
+              disabled={importing}
+            />
+          </label>
           <button
             onClick={handleResetSem}
             className="btn-secondary px-3 py-2 cursor-pointer text-xs"
@@ -290,27 +402,37 @@ export const Semesters: React.FC = () => {
                             value={sub.internalMarks !== undefined && sub.internalMarks !== null ? sub.internalMarks : ''}
                             onChange={(e) => {
                               const val = e.target.value === '' ? null : Number(e.target.value);
-                              const clampedVal = val !== null ? Math.max(0, Math.min(30, val)) : null;
-                              updateSubjectMarks(activeTab, sub.courseCode, clampedVal, sub.externalMarks !== undefined ? sub.externalMarks : null);
+                              const maxInt = sub.courseCode === '23A99101' ? 100 : 30;
+                              const clampedVal = val !== null ? Math.max(0, Math.min(maxInt, val)) : null;
+                              updateSubjectMarks(
+                                activeTab,
+                                sub.courseCode,
+                                clampedVal,
+                                sub.courseCode === '23A99101' ? null : (sub.externalMarks !== undefined ? sub.externalMarks : null)
+                              );
                             }}
                             className="glass-input text-center w-20 py-1 px-2 rounded-xl focus:ring-1 focus:outline-none dark:bg-slate-800 dark:border-darkBorder"
                             min={0}
-                            max={30}
+                            max={sub.courseCode === '23A99101' ? 100 : 30}
                           />
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <input
-                            type="number"
-                            value={sub.externalMarks !== undefined && sub.externalMarks !== null ? sub.externalMarks : ''}
-                            onChange={(e) => {
-                              const val = e.target.value === '' ? null : Number(e.target.value);
-                              const clampedVal = val !== null ? Math.max(0, Math.min(70, val)) : null;
-                              updateSubjectMarks(activeTab, sub.courseCode, sub.internalMarks !== undefined ? sub.internalMarks : null, clampedVal);
-                            }}
-                            className="glass-input text-center w-20 py-1 px-2 rounded-xl focus:ring-1 focus:outline-none dark:bg-slate-800 dark:border-darkBorder"
-                            min={0}
-                            max={70}
-                          />
+                          {sub.courseCode === '23A99101' ? (
+                            <span className="text-slate-400 dark:text-slate-600 font-bold text-sm">N/A</span>
+                          ) : (
+                            <input
+                              type="number"
+                              value={sub.externalMarks !== undefined && sub.externalMarks !== null ? sub.externalMarks : ''}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? null : Number(e.target.value);
+                                const clampedVal = val !== null ? Math.max(0, Math.min(70, val)) : null;
+                                updateSubjectMarks(activeTab, sub.courseCode, sub.internalMarks !== undefined ? sub.internalMarks : null, clampedVal);
+                              }}
+                              className="glass-input text-center w-20 py-1 px-2 rounded-xl focus:ring-1 focus:outline-none dark:bg-slate-800 dark:border-darkBorder"
+                              min={0}
+                              max={70}
+                            />
+                          )}
                         </td>
                         <td className="px-6 py-4 text-center font-bold text-sm text-slate-800 dark:text-slate-200">
                           {sub.totalMarks !== undefined && sub.totalMarks !== null ? sub.totalMarks : '-'}

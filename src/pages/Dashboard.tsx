@@ -9,7 +9,8 @@ import {
   Clock,
   BookOpen,
   HelpCircle,
-  FileText
+  FileText,
+  AlertCircle
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -49,6 +50,11 @@ export const Dashboard: React.FC = () => {
   const earnedCredits = profile?.earnedCredits || 0;
   const totalCredits = profile?.totalCredits || 163; // JNTUA total credits under R23 is exactly 163
   const remainingCredits = Math.max(0, totalCredits - earnedCredits);
+
+  // 1.5 Calculate backlogs (grades F and Ab)
+  const activeBacklogs = semesters.reduce((sum, sem) => {
+    return sum + sem.subjects.filter(sub => sub.grade === 'F' || sub.grade === 'Ab').length;
+  }, 0);
 
   // Dynamic Current Semester Finder:
   // The highest semester number that contains at least one graded subject, else semester 1
@@ -150,9 +156,9 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-5">
         {/* Card 1: CGPA */}
-        <motion.div variants={itemVariants} className="lg:col-span-2 glass-card hover:translate-y-[-4px]">
+        <motion.div variants={itemVariants} className="lg:col-span-3 glass-card hover:translate-y-[-4px]">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
@@ -175,7 +181,7 @@ export const Dashboard: React.FC = () => {
         </motion.div>
 
         {/* Card 2: Percentage */}
-        <motion.div variants={itemVariants} className="lg:col-span-2 glass-card hover:translate-y-[-4px]">
+        <motion.div variants={itemVariants} className="lg:col-span-3 glass-card hover:translate-y-[-4px]">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
@@ -198,7 +204,7 @@ export const Dashboard: React.FC = () => {
         </motion.div>
 
         {/* Card 3: Classification */}
-        <motion.div variants={itemVariants} className="lg:col-span-2 glass-card hover:translate-y-[-4px]">
+        <motion.div variants={itemVariants} className="lg:col-span-3 glass-card hover:translate-y-[-4px]">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
@@ -220,8 +226,31 @@ export const Dashboard: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Card 4: Credits Earned */}
-        <motion.div variants={itemVariants} className="lg:col-span-2 glass-card hover:translate-y-[-4px]">
+        {/* Card 4: Active Backlogs */}
+        <motion.div variants={itemVariants} className="lg:col-span-3 glass-card hover:translate-y-[-4px]">
+          <div className="flex items-start justify-between">
+            <div>
+              <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                Active Backlogs
+              </span>
+              <h3 className={`text-3xl font-extrabold mt-1.5 leading-none ${activeBacklogs > 0 ? 'text-rose-500' : 'text-slate-800 dark:text-white'}`}>
+                {activeBacklogs}
+              </h3>
+            </div>
+            <div className={`p-3 rounded-2xl ${activeBacklogs > 0 ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-500' : 'bg-slate-50 dark:bg-slate-800/30 text-slate-400'}`}>
+              <AlertCircle className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-slate-400 dark:text-slate-500">
+            <span className={`px-2 py-0.5 rounded-full ${activeBacklogs > 0 ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/50' : 'text-slate-600 bg-slate-50 dark:bg-slate-800/50'}`}>
+              {activeBacklogs > 0 ? 'Needs Attention' : 'All Clear'}
+            </span>
+            <span>Grade F or Ab</span>
+          </div>
+        </motion.div>
+
+        {/* Card 5: Credits Earned */}
+        <motion.div variants={itemVariants} className="lg:col-span-4 glass-card hover:translate-y-[-4px]">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
@@ -246,8 +275,8 @@ export const Dashboard: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Card 5: Remaining Credits */}
-        <motion.div variants={itemVariants} className="lg:col-span-2 glass-card hover:translate-y-[-4px]">
+        {/* Card 6: Remaining Credits */}
+        <motion.div variants={itemVariants} className="lg:col-span-4 glass-card hover:translate-y-[-4px]">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
@@ -269,8 +298,8 @@ export const Dashboard: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Card 6: Current Semester */}
-        <motion.div variants={itemVariants} className="lg:col-span-2 glass-card hover:translate-y-[-4px]">
+        {/* Card 7: Current Semester */}
+        <motion.div variants={itemVariants} className="lg:col-span-4 glass-card hover:translate-y-[-4px]">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">

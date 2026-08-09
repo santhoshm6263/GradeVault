@@ -3,7 +3,7 @@ import { doc, getDoc, setDoc, updateDoc, collection, onSnapshot, query, orderBy,
 import { db } from '../firebase/firebase';
 import { Semester, UserProfile, ActivityLog, Grade } from '../types';
 import { JNTUA_R23_CSE_SYLLABUS } from '../data/jntuaR23CseCurriculum';
-import { calculateAcademicSummary } from '../services/calculations';
+import { calculateAcademicSummary, calculateSemesterMetrics } from '../services/calculations';
 
 export const useAcademicData = (
   userId: string | undefined,
@@ -62,14 +62,89 @@ export const useAcademicData = (
           }
         }
 
-        // Save missing semesters (so it preloads for existing users who don't have them)
+        const syncSemesterSubjects = (dbSem: Semester, staticSem: Semester): Semester => {
+          const syncedSubjects = staticSem.subjects.map(staticSub => {
+            let match = dbSem.subjects.find(sub => sub.courseCode === staticSub.courseCode);
+            
+            if (!match) {
+              if (staticSub.courseCode === '23A03508') {
+                match = dbSem.subjects.find(sub => sub.courseCode === '23A05508');
+              } else if (staticSub.courseCode === '23A38502') {
+                match = dbSem.subjects.find(sub => sub.courseCode === '23A05602b');
+              }
+            }
+
+            if (match) {
+              return {
+                ...staticSub,
+                grade: match.grade,
+                gradePoint: match.gradePoint,
+                earnedCredit: match.earnedCredit,
+                internalMarks: match.internalMarks !== undefined ? match.internalMarks : null,
+                externalMarks: match.externalMarks !== undefined ? match.externalMarks : null,
+                totalMarks: match.totalMarks !== undefined ? match.totalMarks : null
+              };
+            }
+
+            return { ...staticSub };
+          });
+
+          return {
+            ...dbSem,
+            subjects: syncedSubjects
+          };
+        };
+
+        const dbSemesters: Semester[] = [];
+        let profileUpdateNeeded = false;
+
         for (const sem of initialSummary.semesters) {
           const semDocRef = doc(db, 'users', userId, 'semesters', `semester${sem.semesterNumber}`);
           const semDoc = await getDoc(semDocRef);
           if (!semDoc.exists()) {
             console.log(`Preloading missing semester ${sem.semesterNumber}`);
             await setDoc(semDocRef, sem);
+            dbSemesters.push(sem);
+            profileUpdateNeeded = true;
+          } else {
+            const dbSem = semDoc.data() as Semester;
+            
+            // Check if semester subjects list is out of sync
+            const needsSync = dbSem.subjects.length !== sem.subjects.length || 
+              dbSem.subjects.some((dbSub, index) => {
+                const staticSub = sem.subjects[index];
+                if (!staticSub) return true;
+                if (dbSub.courseCode === '23A05508' && staticSub.courseCode === '23A03508') return false;
+                if (dbSub.courseCode === '23A05602b' && staticSub.courseCode === '23A38502') return false;
+                
+                return dbSub.courseCode !== staticSub.courseCode || 
+                       dbSub.subjectName !== staticSub.subjectName ||
+                       dbSub.credits !== staticSub.credits;
+              });
+
+            if (needsSync) {
+              console.log(`Semester ${sem.semesterNumber} is out of sync. Migrating subjects...`);
+              const syncedSem = syncSemesterSubjects(dbSem, sem);
+              const updatedSem = calculateSemesterMetrics(syncedSem);
+              await setDoc(semDocRef, updatedSem);
+              dbSemesters.push(updatedSem);
+              profileUpdateNeeded = true;
+            } else {
+              dbSemesters.push(dbSem);
+            }
           }
+        }
+
+        if (profileUpdateNeeded) {
+          console.log('Recalculating and updating profile statistics after sync...');
+          const finalSummary = calculateAcademicSummary(dbSemesters);
+          await updateDoc(userDocRef, {
+            cgpa: finalSummary.cgpa,
+            percentage: finalSummary.percentage,
+            classification: finalSummary.classification,
+            earnedCredits: finalSummary.earnedCredits,
+            totalCredits: finalSummary.totalCredits
+          });
         }
       } catch (err: any) {
         console.error('Initialization error:', err);
@@ -415,6 +490,70 @@ export const useAcademicData = (
     }
   };
 
+  const updateMultipleSubjects = async (
+    updates: {
+      semesterNumber: number;
+      courseCode: string;
+      grade: Grade;
+      internalMarks: number | null;
+      externalMarks: number | null;
+    }[]
+  ) => {
+    if (!userId || !db || semesters.length === 0 || updates.length === 0) return;
+
+    try {
+      let updatedSemesters = JSON.parse(JSON.stringify(semesters)) as Semester[];
+
+      updates.forEach(up => {
+        const sem = updatedSemesters.find(s => s.semesterNumber === up.semesterNumber);
+        if (sem) {
+          const sub = sem.subjects.find(s => s.courseCode === up.courseCode);
+          if (sub) {
+            sub.grade = up.grade;
+            sub.internalMarks = up.internalMarks;
+            sub.externalMarks = up.externalMarks;
+            if (up.courseCode === '23A99101') {
+              sub.externalMarks = null;
+              sub.totalMarks = up.internalMarks;
+            } else {
+              sub.totalMarks = (up.internalMarks || 0) + (up.externalMarks || 0);
+            }
+          }
+        }
+      });
+
+      const summary = calculateAcademicSummary(updatedSemesters);
+
+      const modifiedSemesters = Array.from(new Set(updates.map(u => u.semesterNumber)));
+      for (const semNum of modifiedSemesters) {
+        const semToSave = summary.semesters.find(s => s.semesterNumber === semNum);
+        if (semToSave) {
+          const semDocRef = doc(db, 'users', userId, 'semesters', `semester${semNum}`);
+          await setDoc(semDocRef, semToSave);
+        }
+      }
+
+      await updateDoc(doc(db, 'users', userId), {
+        cgpa: summary.cgpa,
+        percentage: summary.percentage,
+        classification: summary.classification,
+        earnedCredits: summary.earnedCredits,
+        totalCredits: summary.totalCredits
+      });
+
+      const logsColRef = collection(db, 'users', userId, 'activityLogs');
+      await addDoc(logsColRef, {
+        type: 'grade_update',
+        description: `Imported results from PDF: updated ${updates.length} subjects.`,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (err: any) {
+      console.error('Failed to update multiple subjects:', err);
+      setError(err.message || 'Failed to update multiple subjects');
+    }
+  };
+
   return {
     profile,
     semesters,
@@ -425,6 +564,7 @@ export const useAcademicData = (
     updateSubjectName,
     updateSubjectCredits,
     updateSubjectMarks,
+    updateMultipleSubjects,
     resetSemester,
     resetEntireData
   };

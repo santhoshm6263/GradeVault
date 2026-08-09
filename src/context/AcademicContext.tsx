@@ -19,6 +19,15 @@ interface AcademicContextType {
   updateSubjectName: (semesterNumber: number, courseCode: string, newName: string) => Promise<void>;
   updateSubjectCredits: (semesterNumber: number, courseCode: string, newCredits: number) => Promise<void>;
   updateSubjectMarks: (semesterNumber: number, courseCode: string, internalMarks: number | null, externalMarks: number | null) => Promise<void>;
+  updateMultipleSubjects: (
+    updates: {
+      semesterNumber: number;
+      courseCode: string;
+      grade: Grade;
+      internalMarks: number | null;
+      externalMarks: number | null;
+    }[]
+  ) => Promise<void>;
   resetSemester: (semesterNumber: number) => Promise<void>;
   resetEntireData: () => Promise<void>;
 }
@@ -38,6 +47,7 @@ export const AcademicProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     updateSubjectName,
     updateSubjectCredits,
     updateSubjectMarks,
+    updateMultipleSubjects,
     resetSemester,
     resetEntireData
   } = useAcademicData(
@@ -64,6 +74,7 @@ export const AcademicProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         updateSubjectName,
         updateSubjectCredits,
         updateSubjectMarks,
+        updateMultipleSubjects,
         resetSemester,
         resetEntireData
       }}
