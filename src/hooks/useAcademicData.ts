@@ -52,6 +52,14 @@ export const useAcademicData = (
 
           // Save profile
           await setDoc(userDocRef, newProfile);
+        } else {
+          const profileData = userDoc.data() as UserProfile;
+          if (profileData.totalCredits !== initialSummary.totalCredits) {
+            console.log(`Updating user totalCredits to match syllabus: ${initialSummary.totalCredits}`);
+            await updateDoc(userDocRef, {
+              totalCredits: initialSummary.totalCredits
+            });
+          }
         }
 
         // Save missing semesters (so it preloads for existing users who don't have them)

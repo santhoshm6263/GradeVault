@@ -8,6 +8,7 @@ export interface Subject {
   gradePoint: number;
   earnedCredit: number;
   isElective?: boolean;
+  electiveType?: string;
   internalMarks?: number | null;
   externalMarks?: number | null;
   totalMarks?: number | null;

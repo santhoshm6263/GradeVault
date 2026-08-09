@@ -47,7 +47,7 @@ export const Dashboard: React.FC = () => {
   const percentage = profile?.percentage || 0;
   const classification = profile?.classification || 'Not Classified';
   const earnedCredits = profile?.earnedCredits || 0;
-  const totalCredits = profile?.totalCredits || 150; // JNTUA total credits is roughly 160, our default sets 150
+  const totalCredits = profile?.totalCredits || 163; // JNTUA total credits under R23 is exactly 163
   const remainingCredits = Math.max(0, totalCredits - earnedCredits);
 
   // Dynamic Current Semester Finder:

@@ -180,6 +180,7 @@ export const Semesters: React.FC = () => {
               <tr className="bg-slate-50 dark:bg-slate-800/40 text-slate-400 dark:text-slate-500 font-bold text-[10px] uppercase tracking-wider border-b border-slate-200/50 dark:border-darkBorder/30">
                 <th className="px-6 py-4">Course Code</th>
                 <th className="px-6 py-4">Subject Name</th>
+                <th className="px-6 py-4 text-center">Credits</th>
                 {activeTab > 1 && (
                   <>
                     <th className="px-6 py-4 text-center w-24">Internal</th>
@@ -187,7 +188,6 @@ export const Semesters: React.FC = () => {
                     <th className="px-6 py-4 text-center w-24">Total</th>
                   </>
                 )}
-                <th className="px-6 py-4 text-center">Credits</th>
                 <th className="px-6 py-4">Grade</th>
                 <th className="px-6 py-4 text-center">Earned Credit</th>
               </tr>
@@ -240,9 +240,16 @@ export const Semesters: React.FC = () => {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 group">
-                          <span className="text-sm text-slate-800 dark:text-slate-200">
-                            {sub.subjectName}
-                          </span>
+                          <div className="flex flex-col">
+                            {sub.electiveType && (
+                              <span className="text-[10px] font-bold text-primary uppercase tracking-wider leading-none mb-1">
+                                {sub.electiveType}
+                              </span>
+                            )}
+                            <span className="text-sm text-slate-800 dark:text-slate-200">
+                              {sub.subjectName}
+                            </span>
+                          </div>
                           {sub.isElective && (
                             <button
                               onClick={() => startEditing(sub.courseCode, sub.subjectName)}
@@ -254,6 +261,11 @@ export const Semesters: React.FC = () => {
                           )}
                         </div>
                       )}
+                    </td>
+
+                    {/* Credits */}
+                    <td className="px-6 py-4 text-center text-sm font-semibold">
+                      {sub.credits}
                     </td>
 
                     {/* Marks Columns for Semesters 2 to 8 */}
@@ -293,11 +305,6 @@ export const Semesters: React.FC = () => {
                       </>
                     )}
 
-                    {/* Credits */}
-                    <td className="px-6 py-4 text-center text-sm font-semibold">
-                      {sub.credits}
-                    </td>
-
                     {/* Grade Select Dropdown */}
                     <td className="px-6 py-4">
                       <select
@@ -316,8 +323,6 @@ export const Semesters: React.FC = () => {
                         <option value="Ab">Ab (Absent)</option>
                       </select>
                     </td>
-
-
 
                     {/* Earned Credit */}
                     <td className="px-6 py-4 text-center text-sm font-semibold">

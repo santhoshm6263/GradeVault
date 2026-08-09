@@ -35,7 +35,7 @@ export const Profile: React.FC = () => {
     day: 'numeric',
   });
 
-  const totalCredits = profile.totalCredits || 150;
+  const totalCredits = profile.totalCredits || 163;
   const progressPercent = Math.min(100, Math.round((profile.earnedCredits / totalCredits) * 100));
 
   return (
@@ -165,11 +165,11 @@ export const Profile: React.FC = () => {
           </div>
           <div className="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/20">
             <span className="font-semibold text-slate-400 dark:text-slate-500 block">Open Electives</span>
-            <span className="font-black text-sm text-slate-800 dark:text-slate-200 mt-0.5 block">9 Credits</span>
+            <span className="font-black text-sm text-slate-800 dark:text-slate-200 mt-0.5 block">12 Credits</span>
           </div>
           <div className="p-3 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/20">
             <span className="font-semibold text-slate-400 dark:text-slate-500 block">Core Syllabus</span>
-            <span className="font-black text-sm text-slate-800 dark:text-slate-200 mt-0.5 block">141 Credits</span>
+            <span className="font-black text-sm text-slate-800 dark:text-slate-200 mt-0.5 block">151 Credits</span>
           </div>
         </div>
       </div>
