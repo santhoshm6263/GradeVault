@@ -1,4 +1,4 @@
-export type Grade = 'S' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'Ab' | '';
+export type Grade = 'S' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'Ab' | 'Y' | '';
 
 export interface Subject {
   courseCode: string;

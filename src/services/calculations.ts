@@ -9,6 +9,7 @@ export const GRADE_POINTS: Record<Grade, number> = {
   'E': 5,
   'F': 0,
   'Ab': 0,
+  'Y': 0,
   '': 0
 };
 
@@ -45,8 +46,8 @@ export const calculateSubjectDetails = (subject: Subject): Subject => {
 export const calculateSemesterMetrics = (semester: Semester): Semester => {
   const updatedSubjects = semester.subjects.map(calculateSubjectDetails);
   
-  // Graded subjects have non-empty grade value
-  const gradedSubjects = updatedSubjects.filter(sub => sub.grade !== '');
+  // Graded subjects have non-empty grade value, excluding 'Y' (internal only, not in SGPA)
+  const gradedSubjects = updatedSubjects.filter(sub => sub.grade !== '' && sub.grade !== 'Y');
   
   const totalCredits = updatedSubjects.reduce((sum, sub) => sum + sub.credits, 0);
   const earnedCredits = updatedSubjects.reduce((sum, sub) => sum + sub.earnedCredit, 0);
@@ -85,7 +86,7 @@ export const calculateAcademicSummary = (semesters: Semester[]) => {
     totalEarnedCredits += sem.earnedCredits;
     
     sem.subjects.forEach(sub => {
-      if (sub.grade !== '') {
+      if (sub.grade !== '' && sub.grade !== 'Y') {
         weightedGradePointsSum += sub.credits * sub.gradePoint;
         totalCreditsForCgpa += sub.credits;
       }

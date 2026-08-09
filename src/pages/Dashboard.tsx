@@ -77,7 +77,7 @@ export const Dashboard: React.FC = () => {
   });
 
   // 4. Calculate Grade Distribution
-  const counts: Record<string, number> = { S: 0, A: 0, B: 0, C: 0, D: 0, E: 0, F: 0, Ab: 0 };
+  const counts: Record<string, number> = { S: 0, A: 0, B: 0, C: 0, D: 0, E: 0, F: 0, Ab: 0, Y: 0 };
   let totalGradesCount = 0;
   semesters.forEach(sem => {
     sem.subjects.forEach(sub => {
@@ -97,6 +97,7 @@ export const Dashboard: React.FC = () => {
     E: '#F59E0B',   // Amber
     F: '#EF4444',   // Red
     Ab: '#64748B',  // Slate
+    Y: '#14B8A6',   // Teal
   };
 
   const gradeDistributionData = Object.keys(counts)

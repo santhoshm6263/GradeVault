@@ -334,6 +334,7 @@ export const Semesters: React.FC = () => {
                         <option value="E">E (Pass)</option>
                         <option value="F">F (Fail)</option>
                         <option value="Ab">Ab (Absent)</option>
+                        <option value="Y">Y (Internal College Only)</option>
                       </select>
                     </td>
 
