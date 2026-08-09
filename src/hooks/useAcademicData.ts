@@ -364,6 +364,57 @@ export const useAcademicData = (
     }
   };
 
+  const updateSubjectCredits = async (semesterNumber: number, courseCode: string, newCredits: number) => {
+    if (!userId || !db || semesters.length === 0) return;
+
+    try {
+      let subjectName = '';
+      let oldCredits = 0;
+      const updatedSemesters = semesters.map(sem => {
+        if (sem.semesterNumber === semesterNumber) {
+          const updatedSubjects = sem.subjects.map(sub => {
+            if (sub.courseCode === courseCode) {
+              subjectName = sub.subjectName;
+              oldCredits = sub.credits;
+              return { ...sub, credits: newCredits };
+            }
+            return sub;
+          });
+          return { ...sem, subjects: updatedSubjects };
+        }
+        return sem;
+      });
+
+      const summary = calculateAcademicSummary(updatedSemesters);
+
+      const semToSave = summary.semesters.find(s => s.semesterNumber === semesterNumber);
+      if (semToSave) {
+        const semDocRef = doc(db, 'users', userId, 'semesters', `semester${semesterNumber}`);
+        await setDoc(semDocRef, semToSave);
+      }
+
+      // Update user profile document
+      await updateDoc(doc(db, 'users', userId), {
+        cgpa: summary.cgpa,
+        percentage: summary.percentage,
+        classification: summary.classification,
+        earnedCredits: summary.earnedCredits,
+        totalCredits: summary.totalCredits
+      });
+
+      const logsColRef = collection(db, 'users', userId, 'activityLogs');
+      await addDoc(logsColRef, {
+        type: 'grade_update',
+        description: `Updated credits for ${subjectName} (${courseCode}) in Semester ${semesterNumber} from ${oldCredits} to ${newCredits}.`,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (err: any) {
+      console.error('Failed to update course credits:', err);
+      setError(err.message || 'Failed to update course credits');
+    }
+  };
+
   return {
     profile,
     semesters,
@@ -372,6 +423,7 @@ export const useAcademicData = (
     error,
     updateSubjectGrade,
     updateSubjectName,
+    updateSubjectCredits,
     updateSubjectMarks,
     resetSemester,
     resetEntireData

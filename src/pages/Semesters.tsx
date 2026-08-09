@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 
 export const Semesters: React.FC = () => {
-  const { semesters, updateSubjectGrade, updateSubjectName, updateSubjectMarks, resetSemester, academicLoading } = useAcademic();
+  const { semesters, updateSubjectGrade, updateSubjectName, updateSubjectCredits, updateSubjectMarks, resetSemester, academicLoading } = useAcademic();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Active semester selection (1-8)
@@ -264,8 +264,21 @@ export const Semesters: React.FC = () => {
                     </td>
 
                     {/* Credits */}
-                    <td className="px-6 py-4 text-center text-sm font-semibold">
-                      {sub.credits}
+                    <td className="px-6 py-4 text-center">
+                      <select
+                        value={sub.credits}
+                        onChange={(e) => updateSubjectCredits(activeTab, sub.courseCode, Number(e.target.value))}
+                        className="glass-input py-1 px-2.5 rounded-xl font-semibold text-center text-sm focus:ring-1 cursor-pointer w-20 mx-auto block bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-darkBorder"
+                      >
+                        {[0, 0.5, 1, 1.5, 2, 3].map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                        {![0, 0.5, 1, 1.5, 2, 3].includes(sub.credits) && (
+                          <option value={sub.credits}>{sub.credits}</option>
+                        )}
+                      </select>
                     </td>
 
                     {/* Marks Columns for Semesters 2 to 8 */}

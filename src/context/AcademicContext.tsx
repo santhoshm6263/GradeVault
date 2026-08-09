@@ -17,6 +17,7 @@ interface AcademicContextType {
   academicError: string | null;
   updateSubjectGrade: (semesterNumber: number, courseCode: string, newGrade: Grade) => Promise<void>;
   updateSubjectName: (semesterNumber: number, courseCode: string, newName: string) => Promise<void>;
+  updateSubjectCredits: (semesterNumber: number, courseCode: string, newCredits: number) => Promise<void>;
   updateSubjectMarks: (semesterNumber: number, courseCode: string, internalMarks: number | null, externalMarks: number | null) => Promise<void>;
   resetSemester: (semesterNumber: number) => Promise<void>;
   resetEntireData: () => Promise<void>;
@@ -35,6 +36,7 @@ export const AcademicProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     error: academicError,
     updateSubjectGrade,
     updateSubjectName,
+    updateSubjectCredits,
     updateSubjectMarks,
     resetSemester,
     resetEntireData
@@ -60,6 +62,7 @@ export const AcademicProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         academicError,
         updateSubjectGrade,
         updateSubjectName,
+        updateSubjectCredits,
         updateSubjectMarks,
         resetSemester,
         resetEntireData
