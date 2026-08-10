@@ -131,7 +131,55 @@ export const Semesters: React.FC = () => {
 
       semesters.forEach(sem => {
         sem.subjects.forEach(sub => {
-          const startIdx = text.indexOf(sub.courseCode);
+          // Robust subject code matching (handles optional T/P suffix differences)
+          const baseCode = sub.courseCode.replace(/[TP]$/, '');
+          const isLab = sub.courseCode.endsWith('P') || /Lab|Workshop|Practical/i.test(sub.subjectName);
+          
+          let startIdx = -1;
+          let pos = text.indexOf(baseCode);
+          const matches: { idx: number; score: number }[] = [];
+          
+          while (pos !== -1) {
+            const fullWindow = text.substring(pos, pos + 250);
+            
+            // Truncate window at the next course code pattern to avoid boundary leak
+            const nextCodeMatch = fullWindow.substring(10).match(/\b\d{2}[A-Z]\d{5}\w*/);
+            let windowText = fullWindow;
+            if (nextCodeMatch && nextCodeMatch.index !== undefined) {
+              windowText = fullWindow.substring(0, 10 + nextCodeMatch.index);
+            }
+            
+            const keywords = sub.subjectName
+              .toLowerCase()
+              .replace(/[^a-z0-9\s]/g, ' ')
+              .split(/\s+/)
+              .filter(w => w.length > 2 && !['and', 'the', 'for', 'with', 'through', 'basic', 'subject', 'engineering'].includes(w));
+              
+            let matchCount = 0;
+            keywords.forEach(kw => {
+              if (windowText.toLowerCase().includes(kw)) {
+                matchCount++;
+              }
+            });
+            
+            const hasLabIndicator = /lab|workshop|practical|laboratory/i.test(windowText);
+            
+            let score = matchCount;
+            if (isLab === hasLabIndicator) {
+              score += 2;
+            } else {
+              score -= 2;
+            }
+            
+            matches.push({ idx: pos, score });
+            pos = text.indexOf(baseCode, pos + 1);
+          }
+          
+          matches.sort((a, b) => b.score - a.score);
+          if (matches.length > 0 && matches[0].score >= 0) {
+            startIdx = matches[0].idx;
+          }
+
           if (startIdx !== -1) {
             // Search inside a window of 250 characters after the course code to cover name, marks, and grade
             const subText = text.substring(startIdx, startIdx + 250);
