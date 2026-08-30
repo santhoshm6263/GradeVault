@@ -22,7 +22,30 @@ const parseMarksAndGrade = (subWindow: string) => {
     let finalExt = extVal;
     if (finalInt !== null && finalInt > 100) finalInt = null;
     if (finalExt !== null && finalExt > 100) finalExt = null;
-    return { internalMarks: finalInt, externalMarks: finalExt, grade: gVal as Grade };
+    
+    let finalGrade = gVal as Grade;
+    
+    // Calculate grade from marks if marks are available
+    if (finalInt !== null || finalExt !== null) {
+      const total = (finalInt || 0) + (finalExt || 0);
+      let calculatedGrade: Grade = '';
+      if (total >= 90) calculatedGrade = 'S';
+      else if (total >= 80) calculatedGrade = 'A';
+      else if (total >= 70) calculatedGrade = 'B';
+      else if (total >= 60) calculatedGrade = 'C';
+      else if (total >= 40) calculatedGrade = 'D';
+      else if (total >= 25) calculatedGrade = 'E';
+      else calculatedGrade = 'F';
+      
+      // Respect failing or absent grades if explicitly parsed
+      if (gVal === 'F' || gVal === 'AB' || gVal === 'ABS' || gVal === 'Ab') {
+        finalGrade = gVal as Grade;
+      } else {
+        finalGrade = calculatedGrade;
+      }
+    }
+    
+    return { internalMarks: finalInt, externalMarks: finalExt, grade: finalGrade };
   };
 
   // Pattern 1: Standard JNTUA layout: [Internal] [External] [Total] [P/F] [Credits] [Grade]
