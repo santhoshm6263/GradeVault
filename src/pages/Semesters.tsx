@@ -1,11 +1,95 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAcademic } from '../context/AcademicContext';
-import { Edit2, Check, X, RefreshCw, AlertCircle, Sparkles, Upload } from 'lucide-react';
+import { Edit2, Check, X, RefreshCw, AlertCircle, Sparkles, Upload, Camera } from 'lucide-react';
 import { Grade } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import pdfToText from 'react-pdftotext';
+
+const parseMarksAndGrade = (subWindow: string) => {
+  let internalMarks: number | null = null;
+  let externalMarks: number | null = null;
+  let grade: Grade = '';
+
+  // Standardize hyphens/dashes and whitespace
+  const normalized = subWindow
+    .replace(/[\u2012\u2013\u2014\u2015]/g, '-') // replace different dash characters with normal hyphen
+    .replace(/\s+/g, ' '); // normalize spaces
+
+  // Pattern 1: Standard JNTUA layout: [Internal] [External] [Total] [P/F] [Credits] [Grade]
+  // Allow numbers or AB/ABS for internal/external/total, and allow optional decimal credits
+  // E.g. "25 45 70 P 3 A" or "25 - 25 F 0 F" or "25 AB 25 F 0 F" or "AB AB 0 F 0 Ab"
+  const pattern1 = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+(\d+|AB|ABS|Ab|-)\s+([PF])\s+(\d+(?:\.\d+)?)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
+  let match = normalized.match(pattern1);
+
+  if (match) {
+    const intStr = match[1].toUpperCase();
+    const extStr = match[2].toUpperCase();
+    
+    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
+    externalMarks = (extStr === 'AB' || extStr === 'ABS' || extStr === 'Ab' || extStr === '-') ? null : Number(extStr);
+    grade = match[6].toUpperCase() as Grade;
+    
+    if (internalMarks !== null && internalMarks > 100) internalMarks = null;
+    if (externalMarks !== null && externalMarks > 100) externalMarks = null;
+    
+    return { internalMarks, externalMarks, grade };
+  }
+
+  // Pattern 2: [Internal] [External] [Total] [Grade] [Credits]
+  // E.g. "25 45 70 A 3" or "25 45 70 S 1.5"
+  const pattern2 = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b\s+(\d+(?:\.\d+)?)/i;
+  match = normalized.match(pattern2);
+  if (match) {
+    const intStr = match[1].toUpperCase();
+    const extStr = match[2].toUpperCase();
+    
+    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
+    externalMarks = (extStr === 'AB' || extStr === 'ABS' || extStr === 'Ab' || extStr === '-') ? null : Number(extStr);
+    grade = match[4].toUpperCase() as Grade;
+    
+    if (internalMarks !== null && internalMarks > 100) internalMarks = null;
+    if (externalMarks !== null && externalMarks > 100) externalMarks = null;
+    
+    return { internalMarks, externalMarks, grade };
+  }
+
+  // Pattern 3: [Internal] [External] [Total] [Grade] (without credits)
+  // E.g. "25 45 70 A"
+  const pattern3 = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
+  match = normalized.match(pattern3);
+  if (match) {
+    const intStr = match[1].toUpperCase();
+    const extStr = match[2].toUpperCase();
+    
+    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
+    externalMarks = (extStr === 'AB' || extStr === 'ABS' || extStr === 'Ab' || extStr === '-') ? null : Number(extStr);
+    grade = match[4].toUpperCase() as Grade;
+    
+    if (internalMarks !== null && internalMarks > 100) internalMarks = null;
+    if (externalMarks !== null && externalMarks > 100) externalMarks = null;
+    
+    return { internalMarks, externalMarks, grade };
+  }
+
+  // Pattern 4: Explicit Grade mapping: "Grade: A" or similar
+  const gradeKeywordsPattern = /(?:grade|grd|val)\s*[:=-]?\s*\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
+  match = normalized.match(gradeKeywordsPattern);
+  if (match) {
+    grade = match[1].toUpperCase() as Grade;
+    return { internalMarks, externalMarks, grade };
+  }
+
+  // Fallback: match all standalone Grade symbols and pick the last one
+  const allGrades = [...normalized.matchAll(/\b(S|A|B|C|D|E|F|Ab|Y)\b/ig)];
+  if (allGrades.length > 0) {
+    const lastMatch = allGrades[allGrades.length - 1];
+    grade = lastMatch[1].toUpperCase() as Grade;
+  }
+
+  return { internalMarks, externalMarks, grade };
+};
 
 export const Semesters: React.FC = () => {
   const { semesters, updateSubjectGrade, updateSubjectName, updateSubjectCredits, updateSubjectMarks, updateMultipleSubjects, resetSemester, academicLoading } = useAcademic();
@@ -109,6 +193,102 @@ export const Semesters: React.FC = () => {
 
   const [importing, setImporting] = useState(false);
   const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrStatus, setOcrStatus] = useState<string | null>(null);
+
+  const parseAndApplyResults = async (text: string) => {
+    const updates: {
+      semesterNumber: number;
+      courseCode: string;
+      grade: Grade;
+      internalMarks: number | null;
+      externalMarks: number | null;
+    }[] = [];
+
+    semesters.forEach(sem => {
+      sem.subjects.forEach(sub => {
+        // Robust subject code matching (handles optional T/P suffix differences & case insensitivity)
+        // Clean the code to search: e.g. "23A52402a" or "23A05101T" -> base is "23A52402" or "23A05101"
+        const baseCode = sub.courseCode.replace(/[TPa-zA-Z]$/, '');
+        const isLab = sub.courseCode.endsWith('P') || /Lab|Workshop|Practical/i.test(sub.subjectName);
+        
+        let startIdx = -1;
+        let pos = text.toLowerCase().indexOf(baseCode.toLowerCase());
+        const matches: { idx: number; score: number }[] = [];
+        
+        while (pos !== -1) {
+          const fullWindow = text.substring(pos, pos + 250);
+          
+          // Truncate window at the next course code pattern to avoid boundary leak
+          const nextCodeMatch = fullWindow.substring(10).match(/\b\d{2}[A-Z]\d{5}\w*/i);
+          let windowText = fullWindow;
+          if (nextCodeMatch && nextCodeMatch.index !== undefined) {
+            windowText = fullWindow.substring(0, 10 + nextCodeMatch.index);
+          }
+          
+          const keywords = sub.subjectName
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, ' ')
+            .split(/\s+/)
+            .filter(w => w.length > 2 && !['and', 'the', 'for', 'with', 'through', 'basic', 'subject', 'engineering'].includes(w));
+            
+          let matchCount = 0;
+          keywords.forEach(kw => {
+            if (windowText.toLowerCase().includes(kw)) {
+              matchCount++;
+            }
+          });
+          
+          const hasLabIndicator = /lab|workshop|practical|laboratory/i.test(windowText);
+          
+          let score = matchCount;
+          if (isLab === hasLabIndicator) {
+            score += 2;
+          } else {
+            score -= 2;
+          }
+          
+          matches.push({ idx: pos, score });
+          pos = text.toLowerCase().indexOf(baseCode.toLowerCase(), pos + 1);
+        }
+        
+        matches.sort((a, b) => b.score - a.score);
+        if (matches.length > 0 && matches[0].score >= 0) {
+          startIdx = matches[0].idx;
+        }
+
+        if (startIdx !== -1) {
+          // Search inside a window of 250 characters after the course code
+          const subText = text.substring(startIdx, startIdx + 250);
+          const parsed = parseMarksAndGrade(subText);
+
+          if (parsed.grade) {
+            updates.push({
+              semesterNumber: sem.semesterNumber,
+              courseCode: sub.courseCode,
+              grade: parsed.grade,
+              internalMarks: parsed.internalMarks,
+              externalMarks: parsed.externalMarks
+            });
+          }
+        }
+      });
+    });
+
+    if (updates.length > 0) {
+      await updateMultipleSubjects(updates);
+      
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+      
+      alert(`Successfully imported results for ${updates.length} subjects!`);
+    } else {
+      alert('Could not find any matching course codes or grades in the uploaded file. Please make sure this is a valid results document.');
+    }
+  };
 
   const handlePdfImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -120,133 +300,49 @@ export const Semesters: React.FC = () => {
     try {
       const text = await pdfToText(file);
       setImportStatus('Parsing results...');
-
-      const updates: {
-        semesterNumber: number;
-        courseCode: string;
-        grade: Grade;
-        internalMarks: number | null;
-        externalMarks: number | null;
-      }[] = [];
-
-      semesters.forEach(sem => {
-        sem.subjects.forEach(sub => {
-          // Robust subject code matching (handles optional T/P suffix differences)
-          const baseCode = sub.courseCode.replace(/[TP]$/, '');
-          const isLab = sub.courseCode.endsWith('P') || /Lab|Workshop|Practical/i.test(sub.subjectName);
-          
-          let startIdx = -1;
-          let pos = text.indexOf(baseCode);
-          const matches: { idx: number; score: number }[] = [];
-          
-          while (pos !== -1) {
-            const fullWindow = text.substring(pos, pos + 250);
-            
-            // Truncate window at the next course code pattern to avoid boundary leak
-            const nextCodeMatch = fullWindow.substring(10).match(/\b\d{2}[A-Z]\d{5}\w*/);
-            let windowText = fullWindow;
-            if (nextCodeMatch && nextCodeMatch.index !== undefined) {
-              windowText = fullWindow.substring(0, 10 + nextCodeMatch.index);
-            }
-            
-            const keywords = sub.subjectName
-              .toLowerCase()
-              .replace(/[^a-z0-9\s]/g, ' ')
-              .split(/\s+/)
-              .filter(w => w.length > 2 && !['and', 'the', 'for', 'with', 'through', 'basic', 'subject', 'engineering'].includes(w));
-              
-            let matchCount = 0;
-            keywords.forEach(kw => {
-              if (windowText.toLowerCase().includes(kw)) {
-                matchCount++;
-              }
-            });
-            
-            const hasLabIndicator = /lab|workshop|practical|laboratory/i.test(windowText);
-            
-            let score = matchCount;
-            if (isLab === hasLabIndicator) {
-              score += 2;
-            } else {
-              score -= 2;
-            }
-            
-            matches.push({ idx: pos, score });
-            pos = text.indexOf(baseCode, pos + 1);
-          }
-          
-          matches.sort((a, b) => b.score - a.score);
-          if (matches.length > 0 && matches[0].score >= 0) {
-            startIdx = matches[0].idx;
-          }
-
-          if (startIdx !== -1) {
-            // Search inside a window of 250 characters after the course code to cover name, marks, and grade
-            const subText = text.substring(startIdx, startIdx + 250);
-
-            let internalMarks: number | null = null;
-            let externalMarks: number | null = null;
-            let grade: Grade = '';
-
-            // JNTUA format: [Internal] [External] [Total] [ResultStatus (P/F)] [Credits] [Grade]
-            // We allow spaces, dashes/slashes, and optional decimals for credits (e.g. 1.5)
-            const match = subText.match(/\b(\d+)\s+([-–—\d]+)\s+(\d+)\s+([PF])\s+(\d+(?:\.\d+)?)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i);
-            
-            if (match) {
-              const valInt = Number(match[1]);
-              const valExt = match[2] === '-' || match[2] === '–' || match[2] === '—' ? 0 : Number(match[2]);
-              const valTot = Number(match[3]);
-
-              // Validate standard JNTUA marks boundaries to filter out headers, dates, and pincodes
-              if (valInt <= 100 && valExt <= 100 && valTot <= 100 && valTot >= valInt && Math.abs(valTot - (valInt + valExt)) <= 1) {
-                internalMarks = valInt;
-                externalMarks = match[2] === '-' || match[2] === '–' || match[2] === '—' ? null : valExt;
-                grade = match[6].toUpperCase() as Grade;
-              }
-            }
-
-            // Fallback: match just the Grade symbol if no JNTUA results pattern matched
-            if (!grade) {
-              const matchG = subText.match(/\b(S|A|B|C|D|E|F|Ab|Y)\b/i);
-              if (matchG) {
-                grade = matchG[1].toUpperCase() as Grade;
-              }
-            }
-
-            if (grade) {
-              updates.push({
-                semesterNumber: sem.semesterNumber,
-                courseCode: sub.courseCode,
-                grade,
-                internalMarks,
-                externalMarks
-              });
-            }
-          }
-        });
-      });
-
-      if (updates.length > 0) {
-        setImportStatus(`Importing ${updates.length} subjects...`);
-        await updateMultipleSubjects(updates);
-        
-        confetti({
-          particleCount: 150,
-          spread: 80,
-          origin: { y: 0.6 }
-        });
-        
-        alert(`Successfully imported results for ${updates.length} subjects!`);
-      } else {
-        alert('Could not find any matching JNTUA R23 course codes in the uploaded PDF. Please make sure this is a valid results sheet.');
-      }
-
+      await parseAndApplyResults(text);
     } catch (err: any) {
       console.error('PDF Import error:', err);
       alert('Failed to parse the PDF file. Please try again with a clean PDF.');
     } finally {
       setImporting(false);
       setImportStatus(null);
+      e.target.value = '';
+    }
+  };
+
+  const handleScreenshotImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setOcrLoading(true);
+    setOcrStatus('Initializing OCR...');
+
+    try {
+      const Tesseract = (await import('tesseract.js')).default;
+      setOcrStatus('Reading screenshot...');
+      
+      const { data: { text } } = await Tesseract.recognize(
+        file,
+        'eng',
+        {
+          logger: (m) => {
+            if (m.status === 'recognizing text') {
+              setOcrStatus(`OCR: ${Math.round(m.progress * 100)}%`);
+            }
+          }
+        }
+      );
+
+      setOcrStatus('Parsing results...');
+      await parseAndApplyResults(text);
+
+    } catch (err: any) {
+      console.error('Screenshot Import error:', err);
+      alert('Failed to extract text from the screenshot. Please try again with a clearer image.');
+    } finally {
+      setOcrLoading(false);
+      setOcrStatus(null);
       e.target.value = '';
     }
   };
@@ -282,7 +378,12 @@ export const Semesters: React.FC = () => {
             </span>
           </div>
           <div className="w-[1px] h-8 bg-slate-200 dark:bg-darkBorder/50" />
-          <label className="btn-secondary px-3 py-2 cursor-pointer text-xs flex items-center gap-1.5" title="Import Results PDF">
+          <label 
+            className={`btn-secondary px-3 py-2 text-xs flex items-center gap-1.5 ${
+              (importing || ocrLoading) ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'
+            }`} 
+            title="Import Results PDF"
+          >
             {importing ? (
               <span className="w-3.5 h-3.5 border-2 border-primary border-t-transparent animate-spin rounded-full" />
             ) : (
@@ -294,7 +395,27 @@ export const Semesters: React.FC = () => {
               accept="application/pdf"
               onChange={handlePdfImport}
               className="hidden"
-              disabled={importing}
+              disabled={importing || ocrLoading}
+            />
+          </label>
+          <label 
+            className={`btn-secondary px-3 py-2 text-xs flex items-center gap-1.5 ${
+              (importing || ocrLoading) ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'
+            }`} 
+            title="Upload Results Screenshot"
+          >
+            {ocrLoading ? (
+              <span className="w-3.5 h-3.5 border-2 border-primary border-t-transparent animate-spin rounded-full" />
+            ) : (
+              <Camera className="w-3.5 h-3.5" />
+            )}
+            {ocrLoading ? ocrStatus || 'Processing...' : 'Upload Screenshot'}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleScreenshotImport}
+              className="hidden"
+              disabled={importing || ocrLoading}
             />
           </label>
           <button
