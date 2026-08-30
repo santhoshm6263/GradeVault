@@ -253,7 +253,7 @@ export const Semesters: React.FC = () => {
         }
         
         matches.sort((a, b) => b.score - a.score);
-        if (matches.length > 0 && matches[0].score >= 0) {
+        if (matches.length > 0) {
           startIdx = matches[0].idx;
         }
 
