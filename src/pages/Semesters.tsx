@@ -17,6 +17,14 @@ const parseMarksAndGrade = (subWindow: string) => {
     .replace(/[\u2012\u2013\u2014\u2015]/g, '-') // replace different dash characters with normal hyphen
     .replace(/\s+/g, ' '); // normalize spaces
 
+  const sanitizeResult = (intVal: number | null, extVal: number | null, gVal: string): { internalMarks: number | null; externalMarks: number | null; grade: Grade } => {
+    let finalInt = intVal;
+    let finalExt = extVal;
+    if (finalInt !== null && finalInt > 100) finalInt = null;
+    if (finalExt !== null && finalExt > 100) finalExt = null;
+    return { internalMarks: finalInt, externalMarks: finalExt, grade: gVal as Grade };
+  };
+
   // Pattern 1: Standard JNTUA layout: [Internal] [External] [Total] [P/F] [Credits] [Grade]
   // Allow numbers or AB/ABS for internal/external/total, and allow optional decimal credits
   // E.g. "25 45 70 P 3 A" or "25 - 25 F 0 F" or "25 AB 25 F 0 F" or "AB AB 0 F 0 Ab"
@@ -26,51 +34,108 @@ const parseMarksAndGrade = (subWindow: string) => {
   if (match) {
     const intStr = match[1].toUpperCase();
     const extStr = match[2].toUpperCase();
-    
     internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
     externalMarks = (extStr === 'AB' || extStr === 'ABS' || extStr === 'Ab' || extStr === '-') ? null : Number(extStr);
     grade = match[6].toUpperCase() as Grade;
-    
-    if (internalMarks !== null && internalMarks > 100) internalMarks = null;
-    if (externalMarks !== null && externalMarks > 100) externalMarks = null;
-    
-    return { internalMarks, externalMarks, grade };
+    return sanitizeResult(internalMarks, externalMarks, grade);
   }
 
-  // Pattern 2: [Internal] [External] [Total] [Grade] [Credits]
+  // Pattern 1b: 2 numbers/dashes with Status & Credits (For Skill Courses/Internships with 100% internal evaluation)
+  // E.g. "90 90 P 2 S" or "90 - P 2 S"
+  const pattern1b = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+([PF])\s+(\d+(?:\.\d+)?)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
+  match = normalized.match(pattern1b);
+  if (match) {
+    const intStr = match[1].toUpperCase();
+    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
+    externalMarks = null;
+    grade = match[5].toUpperCase() as Grade;
+    return sanitizeResult(internalMarks, externalMarks, grade);
+  }
+
+  // Pattern 1c: 1 number/dash with Status & Credits
+  // E.g. "90 P 2 S" or "- F 0 F"
+  const pattern1c = /\b(\d+|AB|ABS|Ab|-)\s+([PF])\s+(\d+(?:\.\d+)?)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
+  match = normalized.match(pattern1c);
+  if (match) {
+    const intStr = match[1].toUpperCase();
+    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab' || intStr === '-') ? null : Number(intStr);
+    externalMarks = null;
+    grade = match[4].toUpperCase() as Grade;
+    return sanitizeResult(internalMarks, externalMarks, grade);
+  }
+
+  // Pattern 2: [Internal] [External] [Total] [Grade] [Credits] (no Status)
   // E.g. "25 45 70 A 3" or "25 45 70 S 1.5"
   const pattern2 = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b\s+(\d+(?:\.\d+)?)/i;
   match = normalized.match(pattern2);
   if (match) {
     const intStr = match[1].toUpperCase();
     const extStr = match[2].toUpperCase();
-    
     internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
     externalMarks = (extStr === 'AB' || extStr === 'ABS' || extStr === 'Ab' || extStr === '-') ? null : Number(extStr);
     grade = match[4].toUpperCase() as Grade;
-    
-    if (internalMarks !== null && internalMarks > 100) internalMarks = null;
-    if (externalMarks !== null && externalMarks > 100) externalMarks = null;
-    
-    return { internalMarks, externalMarks, grade };
+    return sanitizeResult(internalMarks, externalMarks, grade);
   }
 
-  // Pattern 3: [Internal] [External] [Total] [Grade] (without credits)
+  // Pattern 2b: 2 numbers/dashes with Grade & Credits (no Status)
+  // E.g. "90 90 S 2"
+  const pattern2b = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b\s+(\d+(?:\.\d+)?)/i;
+  match = normalized.match(pattern2b);
+  if (match) {
+    const intStr = match[1].toUpperCase();
+    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
+    externalMarks = null;
+    grade = match[3].toUpperCase() as Grade;
+    return sanitizeResult(internalMarks, externalMarks, grade);
+  }
+
+  // Pattern 2c: 1 number/dash with Grade & Credits (no Status)
+  // E.g. "90 S 2"
+  const pattern2c = /\b(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b\s+(\d+(?:\.\d+)?)/i;
+  match = normalized.match(pattern2c);
+  if (match) {
+    const intStr = match[1].toUpperCase();
+    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab' || intStr === '-') ? null : Number(intStr);
+    externalMarks = null;
+    grade = match[2].toUpperCase() as Grade;
+    return sanitizeResult(internalMarks, externalMarks, grade);
+  }
+
+  // Pattern 3: [Internal] [External] [Total] [Grade] (without credits or Status)
   // E.g. "25 45 70 A"
   const pattern3 = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
   match = normalized.match(pattern3);
   if (match) {
     const intStr = match[1].toUpperCase();
     const extStr = match[2].toUpperCase();
-    
     internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
     externalMarks = (extStr === 'AB' || extStr === 'ABS' || extStr === 'Ab' || extStr === '-') ? null : Number(extStr);
     grade = match[4].toUpperCase() as Grade;
-    
-    if (internalMarks !== null && internalMarks > 100) internalMarks = null;
-    if (externalMarks !== null && externalMarks > 100) externalMarks = null;
-    
-    return { internalMarks, externalMarks, grade };
+    return sanitizeResult(internalMarks, externalMarks, grade);
+  }
+
+  // Pattern 3b: 2 numbers/dashes & Grade
+  // E.g. "90 90 S"
+  const pattern3b = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
+  match = normalized.match(pattern3b);
+  if (match) {
+    const intStr = match[1].toUpperCase();
+    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
+    externalMarks = null;
+    grade = match[3].toUpperCase() as Grade;
+    return sanitizeResult(internalMarks, externalMarks, grade);
+  }
+
+  // Pattern 3c: 1 number/dash & Grade
+  // E.g. "90 S"
+  const pattern3c = /\b(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
+  match = normalized.match(pattern3c);
+  if (match) {
+    const intStr = match[1].toUpperCase();
+    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab' || intStr === '-') ? null : Number(intStr);
+    externalMarks = null;
+    grade = match[2].toUpperCase() as Grade;
+    return sanitizeResult(internalMarks, externalMarks, grade);
   }
 
   // Pattern 4: Explicit Grade mapping: "Grade: A" or similar
