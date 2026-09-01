@@ -23,7 +23,44 @@ const PRESET_GOALS = [
 
 export const Simulator: React.FC = () => {
   const { semesters, profile, academicLoading } = useAcademic();
-  const [targetCgpa, setTargetCgpa] = useState<number>(8.0);
+  const storageKey = profile?.uid ? `gradevault_sim_${profile.uid}` : 'gradevault_sim_guest';
+
+  const [targetCgpa, setTargetCgpa] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(`${storageKey}_target`);
+      return saved ? parseFloat(saved) : 8.0;
+    } catch {
+      return 8.0;
+    }
+  });
+
+  // Initial future SGPA simulations loaded from localStorage
+  const [simulatedSgpas, setSimulatedSgpas] = useState<Record<number, number>>(() => {
+    try {
+      const saved = localStorage.getItem(`${storageKey}_sgpas`);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Auto-save targetCgpa whenever it changes
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(`${storageKey}_target`, String(targetCgpa));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [targetCgpa, storageKey]);
+
+  // Auto-save simulatedSgpas whenever they change
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(`${storageKey}_sgpas`, JSON.stringify(simulatedSgpas));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [simulatedSgpas, storageKey]);
 
   // Compute completed and remaining semester stats
   const {
@@ -70,9 +107,6 @@ export const Simulator: React.FC = () => {
       futureSemesters: future
     };
   }, [semesters]);
-
-  // Initial future SGPA simulations
-  const [simulatedSgpas, setSimulatedSgpas] = useState<Record<number, number>>({});
 
   const handleSliderChange = (semNum: number, value: number) => {
     setSimulatedSgpas((prev) => ({
@@ -124,6 +158,11 @@ export const Simulator: React.FC = () => {
 
   const handleResetSliders = () => {
     setSimulatedSgpas({});
+    try {
+      localStorage.removeItem(`${storageKey}_sgpas`);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleApplyPreset = (val: number) => {

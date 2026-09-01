@@ -32,42 +32,133 @@ interface ExperienceItem {
 
 export const ResumeBuilder: React.FC = () => {
   const { profile, semesters, academicLoading } = useAcademic();
+  const storageKey = profile?.uid ? `gradevault_resume_${profile.uid}` : 'gradevault_resume_guest';
 
-  const [phone, setPhone] = useState('+91 98765 43210');
-  const [location, setLocation] = useState('Anantapur, Andhra Pradesh');
-  const [linkedin, setLinkedin] = useState('linkedin.com/in/student');
-  const [github, setGithub] = useState('github.com/student');
-  const [summary, setSummary] = useState(
-    'Motivated engineering student with a strong foundation in core computer science, software development, and analytical problem-solving. Seeking placement opportunities to contribute to innovative software solutions.'
-  );
-
-  const [skills, setSkills] = useState('Java, Python, C++, React.js, Tailwind CSS, SQL, Git, Data Structures & Algorithms');
-  const [certifications, setCertifications] = useState('NPTEL Programming in Java, Coursera Full-Stack Web Development, AWS Academy Cloud Foundations');
-
-  const [projects, setProjects] = useState<ProjectItem[]>([
-    {
-      id: '1',
-      title: 'GradeVault - Student Academic Performance Tracker',
-      technologies: 'React, TypeScript, Firebase, Tailwind CSS, Recharts',
-      description: 'Built a real-time academic tracker and universal result parser for engineering students to calculate SGPA, CGPA, and placement eligibility.'
-    },
-    {
-      id: '2',
-      title: 'AI Smart Result Parser & Analytics',
-      technologies: 'Python, OCR, REST APIs',
-      description: 'Developed an automated OCR parsing engine to extract subject marks and grades directly from university result sheets with high accuracy.'
+  const [phone, setPhone] = useState(() => {
+    try {
+      return localStorage.getItem(`${storageKey}_phone`) || '+91 98765 43210';
+    } catch {
+      return '+91 98765 43210';
     }
-  ]);
+  });
 
-  const [experiences, setExperiences] = useState<ExperienceItem[]>([
-    {
-      id: '1',
-      role: 'Full Stack Development Intern',
-      company: 'Tech Solutions Inc.',
-      duration: 'Summer 2025 (2 Months)',
-      description: 'Collaborated on frontend UI components, API integration, and database querying.'
+  const [location, setLocation] = useState(() => {
+    try {
+      return localStorage.getItem(`${storageKey}_location`) || 'Anantapur, Andhra Pradesh';
+    } catch {
+      return 'Anantapur, Andhra Pradesh';
     }
-  ]);
+  });
+
+  const [linkedin, setLinkedin] = useState(() => {
+    try {
+      return localStorage.getItem(`${storageKey}_linkedin`) || 'linkedin.com/in/student';
+    } catch {
+      return 'linkedin.com/in/student';
+    }
+  });
+
+  const [github, setGithub] = useState(() => {
+    try {
+      return localStorage.getItem(`${storageKey}_github`) || 'github.com/student';
+    } catch {
+      return 'github.com/student';
+    }
+  });
+
+  const [summary, setSummary] = useState(() => {
+    try {
+      return (
+        localStorage.getItem(`${storageKey}_summary`) ||
+        'Motivated engineering student with a strong foundation in core computer science, software development, and analytical problem-solving. Seeking placement opportunities to contribute to innovative software solutions.'
+      );
+    } catch {
+      return 'Motivated engineering student with a strong foundation in core computer science, software development, and analytical problem-solving. Seeking placement opportunities to contribute to innovative software solutions.';
+    }
+  });
+
+  const [skills, setSkills] = useState(() => {
+    try {
+      return localStorage.getItem(`${storageKey}_skills`) || 'Java, Python, C++, React.js, Tailwind CSS, SQL, Git, Data Structures & Algorithms';
+    } catch {
+      return 'Java, Python, C++, React.js, Tailwind CSS, SQL, Git, Data Structures & Algorithms';
+    }
+  });
+
+  const [certifications, setCertifications] = useState(() => {
+    try {
+      return localStorage.getItem(`${storageKey}_certifications`) || 'NPTEL Programming in Java, Coursera Full-Stack Web Development, AWS Academy Cloud Foundations';
+    } catch {
+      return 'NPTEL Programming in Java, Coursera Full-Stack Web Development, AWS Academy Cloud Foundations';
+    }
+  });
+
+  const [projects, setProjects] = useState<ProjectItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${storageKey}_projects`);
+      return saved
+        ? JSON.parse(saved)
+        : [
+            {
+              id: '1',
+              title: 'GradeVault - Student Academic Performance Tracker',
+              technologies: 'React, TypeScript, Firebase, Tailwind CSS, Recharts',
+              description: 'Built a real-time academic tracker and universal result parser for engineering students to calculate SGPA, CGPA, and placement eligibility.'
+            },
+            {
+              id: '2',
+              title: 'AI Smart Result Parser & Analytics',
+              technologies: 'Python, OCR, REST APIs',
+              description: 'Developed an automated OCR parsing engine to extract subject marks and grades directly from university result sheets with high accuracy.'
+            }
+          ];
+    } catch {
+      return [
+        {
+          id: '1',
+          title: 'GradeVault - Student Academic Performance Tracker',
+          technologies: 'React, TypeScript, Firebase, Tailwind CSS, Recharts',
+          description: 'Built a real-time academic tracker and universal result parser for engineering students to calculate SGPA, CGPA, and placement eligibility.'
+        }
+      ];
+    }
+  });
+
+  const [experiences, setExperiences] = useState<ExperienceItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${storageKey}_experiences`);
+      return saved
+        ? JSON.parse(saved)
+        : [
+            {
+              id: '1',
+              role: 'Full Stack Development Intern',
+              company: 'Tech Solutions Inc.',
+              duration: 'Summer 2025 (2 Months)',
+              description: 'Collaborated on frontend UI components, API integration, and database querying.'
+            }
+          ];
+    } catch {
+      return [];
+    }
+  });
+
+  // Auto-save all resume changes
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(`${storageKey}_phone`, phone);
+      localStorage.setItem(`${storageKey}_location`, location);
+      localStorage.setItem(`${storageKey}_linkedin`, linkedin);
+      localStorage.setItem(`${storageKey}_github`, github);
+      localStorage.setItem(`${storageKey}_summary`, summary);
+      localStorage.setItem(`${storageKey}_skills`, skills);
+      localStorage.setItem(`${storageKey}_certifications`, certifications);
+      localStorage.setItem(`${storageKey}_projects`, JSON.stringify(projects));
+      localStorage.setItem(`${storageKey}_experiences`, JSON.stringify(experiences));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [phone, location, linkedin, github, summary, skills, certifications, projects, experiences, storageKey]);
 
   // Extract top high-scoring subjects (Grade S and A)
   const topSubjects = useMemo(() => {
