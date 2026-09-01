@@ -32,6 +32,7 @@ interface AcademicContextType {
     }
   ) => Promise<void>;
   deleteSubject: (semesterNumber: number, courseCode: string) => Promise<void>;
+  switchDepartmentCurriculum: (department: string) => Promise<void>;
   resetSemester: (semesterNumber: number) => Promise<void>;
   resetEntireData: () => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
@@ -55,6 +56,7 @@ export const AcademicProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     updateMultipleSubjects,
     addCustomSubject,
     deleteSubject,
+    switchDepartmentCurriculum,
     resetSemester,
     resetEntireData,
     updateUserProfile
@@ -85,6 +87,7 @@ export const AcademicProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         updateMultipleSubjects,
         addCustomSubject,
         deleteSubject,
+        switchDepartmentCurriculum,
         resetSemester,
         resetEntireData,
         updateUserProfile

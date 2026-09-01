@@ -30,14 +30,18 @@ const DEPARTMENT_OPTIONS = [
 
 export const Settings: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
-  const { profile, semesters, resetSemester, resetEntireData, updateUserProfile } = useAcademic();
+  const { profile, semesters, resetSemester, resetEntireData, updateUserProfile, switchDepartmentCurriculum } = useAcademic();
   const [selectedSem, setSelectedSem] = useState<number>(1);
   const [isResettingAll, setIsResettingAll] = useState(false);
-  const [selectedDept, setSelectedDept] = useState(profile?.department || 'CSE');
+  const [selectedDept, setSelectedDept] = useState(profile?.department || 'EEE');
   const [isDeptSaved, setIsDeptSaved] = useState(false);
 
   const handleSaveDepartment = async () => {
-    await updateUserProfile({ department: selectedDept });
+    if (window.confirm(`Switch your branch to ${selectedDept} and load the official JNTUA R23 ${selectedDept} curriculum?`)) {
+      await switchDepartmentCurriculum(selectedDept);
+    } else {
+      await updateUserProfile({ department: selectedDept });
+    }
     setIsDeptSaved(true);
     setTimeout(() => setIsDeptSaved(false), 2500);
   };

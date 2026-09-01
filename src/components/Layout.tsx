@@ -16,11 +16,13 @@ import {
 import { useAcademic } from '../context/AcademicContext';
 import { ThemeToggle } from './ThemeToggle';
 import { GlobalSearch } from './GlobalSearch';
+import { DepartmentSelectModal } from './DepartmentSelectModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, profile, logout } = useAcademic();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [deptModalOpen, setDeptModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -41,8 +43,18 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   const currentNavName = navItems.find(item => item.path === location.pathname)?.name || 'GradeVault';
 
+  // Open modal if user has no department assigned
+  const showOnboardingModal = Boolean(profile && (!profile.department || profile.department.trim() === ''));
+
   return (
     <div className="min-h-screen flex bg-slate-50 dark:bg-darkBg text-slate-800 dark:text-slate-100 transition-colors duration-200">
+      {/* Branch Onboarding / Selection Modal */}
+      <DepartmentSelectModal
+        isOpen={showOnboardingModal || deptModalOpen}
+        onClose={() => setDeptModalOpen(false)}
+        isDismissable={!showOnboardingModal}
+      />
+
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 glass-panel border-r border-slate-200/50 dark:border-darkBorder/50 fixed h-full z-30 no-print">
         {/* Brand Header */}
@@ -54,9 +66,13 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <h1 className="text-lg font-extrabold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
               GradeVault
             </h1>
-            <span className="text-[10px] font-semibold text-primary dark:text-primary-400 tracking-wider uppercase">
-              JNTUA R23 • {profile?.department || 'ALL DEPTS'}
-            </span>
+            <button
+              onClick={() => setDeptModalOpen(true)}
+              className="text-[10px] font-bold text-primary dark:text-primary-400 tracking-wider uppercase hover:underline flex items-center gap-1 cursor-pointer"
+              title="Click to switch department syllabus"
+            >
+              JNTUA R23 • {profile?.department || 'SELECT DEPT'}
+            </button>
           </div>
         </div>
 

@@ -3,6 +3,7 @@ import { doc, getDoc, setDoc, updateDoc, collection, onSnapshot, query, orderBy,
 import { db } from '../firebase/firebase';
 import { Semester, UserProfile, ActivityLog, Grade, Subject } from '../types';
 import { JNTUA_R23_CSE_SYLLABUS } from '../data/jntuaR23CseCurriculum';
+import { getSyllabusForDepartment } from '../data/departmentCurriculums';
 import { calculateAcademicSummary, calculateSemesterMetrics } from '../services/calculations';
 
 export interface SubjectUpdateItem {
@@ -43,10 +44,20 @@ export const useAcademicData = (
     const initUserData = async () => {
       try {
         const userDoc = await getDoc(userDocRef);
-        const initialSummary = calculateAcademicSummary(JSON.parse(JSON.stringify(JNTUA_R23_CSE_SYLLABUS)));
+        let userDept = 'CSE';
+        
+        if (userDoc.exists()) {
+          const p = userDoc.data() as UserProfile;
+          if (p.department) {
+            userDept = p.department;
+          }
+        }
+
+        const deptSyllabus = getSyllabusForDepartment(userDept);
+        const initialSummary = calculateAcademicSummary(JSON.parse(JSON.stringify(deptSyllabus)));
 
         if (!userDoc.exists()) {
-          console.log('First login: creating user profile & preloading syllabus');
+          console.log('First login: creating user profile');
           
           const newProfile: UserProfile = {
             uid: userId,
@@ -59,7 +70,7 @@ export const useAcademicData = (
             classification: initialSummary.classification,
             earnedCredits: initialSummary.earnedCredits,
             totalCredits: initialSummary.totalCredits,
-            department: 'All Departments / Universal',
+            department: '', // Empty prompts branch selector on first login
             regulation: 'R23'
           };
 
@@ -83,7 +94,6 @@ export const useAcademicData = (
             await setDoc(semDocRef, defaultSem);
             dbSemesters.push(defaultSem);
           } else {
-            // Respect existing semester data completely - no destructive overwrite
             const dbSem = semDoc.data() as Semester;
             dbSemesters.push(dbSem);
           }
@@ -487,10 +497,6 @@ export const useAcademicData = (
     }
   };
 
-  /**
-   * Universal results updater:
-   * Dynamically inserts or updates subjects for ANY semester and department.
-   */
   const updateMultipleSubjects = async (updates: SubjectUpdateItem[]) => {
     if (!userId || !db || updates.length === 0) return;
 
@@ -521,7 +527,6 @@ export const useAcademicData = (
             : ((up.internalMarks || 0) + (up.externalMarks || 0));
 
           if (sub) {
-            // Update existing subject
             sub.grade = up.grade;
             sub.internalMarks = up.internalMarks;
             sub.externalMarks = up.externalMarks;
@@ -533,7 +538,6 @@ export const useAcademicData = (
               sub.subjectName = up.subjectName;
             }
           } else {
-            // Dynamically inject new subject for that semester
             sem.subjects.push({
               courseCode: up.courseCode.toUpperCase(),
               subjectName: up.subjectName || `Course ${up.courseCode}`,
@@ -581,11 +585,45 @@ export const useAcademicData = (
     }
   };
 
+  const switchDepartmentCurriculum = async (deptCode: string) => {
+    if (!userId || !db) return;
+    try {
+      const newSyllabus = getSyllabusForDepartment(deptCode);
+      const newSummary = calculateAcademicSummary(JSON.parse(JSON.stringify(newSyllabus)));
+
+      for (const sem of newSummary.semesters) {
+        const semDocRef = doc(db, 'users', userId, 'semesters', `semester${sem.semesterNumber}`);
+        await setDoc(semDocRef, sem);
+      }
+
+      await updateDoc(doc(db, 'users', userId), {
+        department: deptCode,
+        cgpa: newSummary.cgpa,
+        percentage: newSummary.percentage,
+        classification: newSummary.classification,
+        earnedCredits: newSummary.earnedCredits,
+        totalCredits: newSummary.totalCredits
+      });
+
+      const logsColRef = collection(db, 'users', userId, 'activityLogs');
+      await addDoc(logsColRef, {
+        type: 'grade_update',
+        description: `Switched branch curriculum to JNTUA R23 ${deptCode}.`,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err: any) {
+      console.error('Failed to switch department curriculum:', err);
+      setError(err.message || 'Failed to switch curriculum');
+    }
+  };
+
   const resetSemester = async (semesterNumber: number) => {
     if (!userId || !db) return;
 
     try {
-      const defaultSemester = JSON.parse(JSON.stringify(JNTUA_R23_CSE_SYLLABUS[semesterNumber - 1])) || {
+      const userDept = profile?.department || 'CSE';
+      const deptSyllabus = getSyllabusForDepartment(userDept);
+      const defaultSemester = JSON.parse(JSON.stringify(deptSyllabus[semesterNumber - 1])) || {
         semesterNumber,
         sgpa: 0,
         earnedCredits: 0,
@@ -629,7 +667,9 @@ export const useAcademicData = (
     if (!userId || !db) return;
 
     try {
-      const initialSummary = calculateAcademicSummary(JSON.parse(JSON.stringify(JNTUA_R23_CSE_SYLLABUS)));
+      const userDept = profile?.department || 'CSE';
+      const deptSyllabus = getSyllabusForDepartment(userDept);
+      const initialSummary = calculateAcademicSummary(JSON.parse(JSON.stringify(deptSyllabus)));
 
       for (const sem of initialSummary.semesters) {
         const semDocRef = doc(db, 'users', userId, 'semesters', `semester${sem.semesterNumber}`);
@@ -680,6 +720,7 @@ export const useAcademicData = (
     updateMultipleSubjects,
     addCustomSubject,
     deleteSubject,
+    switchDepartmentCurriculum,
     resetSemester,
     resetEntireData,
     updateUserProfile
