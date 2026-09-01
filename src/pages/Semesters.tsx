@@ -470,6 +470,16 @@ export const Semesters: React.FC = () => {
                             <span className="text-sm text-slate-800 dark:text-slate-200">
                               {sub.subjectName}
                             </span>
+                            {sub.grade === 'F' && (
+                              <span className="inline-block mt-1 text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-500/20 w-max">
+                                Active Backlog (Supply / Re-eval)
+                              </span>
+                            )}
+                            {sub.grade === 'Ab' && (
+                              <span className="inline-block mt-1 text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-500/20 w-max">
+                                Absent (Supply / Re-eval)
+                              </span>
+                            )}
                           </div>
                           <button
                             onClick={() => startEditing(sub.courseCode, sub.subjectName)}

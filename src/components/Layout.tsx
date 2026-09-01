@@ -3,6 +3,9 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   GraduationCap,
+  Target,
+  Briefcase,
+  FileText,
   User,
   Settings,
   LogOut,
@@ -24,6 +27,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Semesters', path: '/semesters', icon: GraduationCap },
+    { name: 'Goal Simulator', path: '/simulator', icon: Target },
+    { name: 'Placements', path: '/placements', icon: Briefcase },
+    { name: 'Resume Builder', path: '/resume', icon: FileText },
     { name: 'Profile', path: '/profile', icon: User },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];

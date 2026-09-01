@@ -5,6 +5,9 @@ import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Semesters } from './pages/Semesters';
+import { Simulator } from './pages/Simulator';
+import { Placements } from './pages/Placements';
+import { ResumeBuilder } from './pages/ResumeBuilder';
 import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
 import { isFirebaseConfigured } from './firebase/firebase';
@@ -120,6 +123,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <Semesters />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/simulator"
+            element={
+              <ProtectedRoute>
+                <Simulator />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/placements"
+            element={
+              <ProtectedRoute>
+                <Placements />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/resume"
+            element={
+              <ProtectedRoute>
+                <ResumeBuilder />
               </ProtectedRoute>
             }
           />
