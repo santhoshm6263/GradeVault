@@ -1,6 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useAcademicData } from '../hooks/useAcademicData';
+import { useAcademicData, SubjectUpdateItem } from '../hooks/useAcademicData';
 import { Semester, UserProfile, ActivityLog, Grade } from '../types';
 import { User } from 'firebase/auth';
 
@@ -19,17 +19,22 @@ interface AcademicContextType {
   updateSubjectName: (semesterNumber: number, courseCode: string, newName: string) => Promise<void>;
   updateSubjectCredits: (semesterNumber: number, courseCode: string, newCredits: number) => Promise<void>;
   updateSubjectMarks: (semesterNumber: number, courseCode: string, internalMarks: number | null, externalMarks: number | null) => Promise<void>;
-  updateMultipleSubjects: (
-    updates: {
-      semesterNumber: number;
+  updateMultipleSubjects: (updates: SubjectUpdateItem[]) => Promise<void>;
+  addCustomSubject: (
+    semesterNumber: number,
+    subject: {
       courseCode: string;
-      grade: Grade;
-      internalMarks: number | null;
-      externalMarks: number | null;
-    }[]
+      subjectName: string;
+      credits: number;
+      grade?: Grade;
+      internalMarks?: number | null;
+      externalMarks?: number | null;
+    }
   ) => Promise<void>;
+  deleteSubject: (semesterNumber: number, courseCode: string) => Promise<void>;
   resetSemester: (semesterNumber: number) => Promise<void>;
   resetEntireData: () => Promise<void>;
+  updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
 }
 
 const AcademicContext = createContext<AcademicContextType | undefined>(undefined);
@@ -48,8 +53,11 @@ export const AcademicProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     updateSubjectCredits,
     updateSubjectMarks,
     updateMultipleSubjects,
+    addCustomSubject,
+    deleteSubject,
     resetSemester,
-    resetEntireData
+    resetEntireData,
+    updateUserProfile
   } = useAcademicData(
     user?.uid,
     user?.email || undefined,
@@ -75,8 +83,11 @@ export const AcademicProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         updateSubjectCredits,
         updateSubjectMarks,
         updateMultipleSubjects,
+        addCustomSubject,
+        deleteSubject,
         resetSemester,
-        resetEntireData
+        resetEntireData,
+        updateUserProfile
       }}
     >
       {children}

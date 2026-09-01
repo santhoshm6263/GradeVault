@@ -65,7 +65,7 @@ export const Profile: React.FC = () => {
                 {profile.name}
               </h2>
               <span className="text-[10px] font-bold tracking-widest text-primary uppercase bg-emerald-50 dark:bg-emerald-950/40 border border-primary/20 px-3 py-1 rounded-full mt-1.5 inline-block">
-                JNTUA R23 CSE Undergraduate
+                JNTUA R23 • {profile.department || 'B.Tech'} Undergraduate
               </span>
             </div>
 

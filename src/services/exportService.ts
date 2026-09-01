@@ -273,7 +273,7 @@ export const printTranscript = (semesters: Semester[], profile: UserProfile | nu
         <div class="student-info">
           <div class="info-item"><strong>Student Name:</strong> ${profile.name}</div>
           <div class="info-item"><strong>Registered Email:</strong> ${profile.email}</div>
-          <div class="info-item"><strong>Curriculum Regulation:</strong> R23 Computer Science & Engineering</div>
+          <div class="info-item"><strong>Curriculum Regulation:</strong> ${profile.regulation || 'R23'} ${profile.department || 'B.Tech'}</div>
           <div class="info-item"><strong>Date Generated:</strong> ${new Date().toLocaleDateString()}</div>
         </div>
 

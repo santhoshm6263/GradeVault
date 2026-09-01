@@ -11,15 +11,36 @@ import {
   FileText,
   Printer,
   ShieldAlert,
-  Sparkles
+  GraduationCap,
+  Check
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+
+const DEPARTMENT_OPTIONS = [
+  { id: 'CSE', label: 'Computer Science and Engineering (CSE)' },
+  { id: 'ECE', label: 'Electronics and Communication Engineering (ECE)' },
+  { id: 'EEE', label: 'Electrical and Electronics Engineering (EEE)' },
+  { id: 'MECH', label: 'Mechanical Engineering (MECH)' },
+  { id: 'CIVIL', label: 'Civil Engineering (CIVIL)' },
+  { id: 'IT', label: 'Information Technology (IT)' },
+  { id: 'CSE (AI&ML)', label: 'CSE - Artificial Intelligence & Machine Learning' },
+  { id: 'AI&DS', label: 'Artificial Intelligence and Data Science (AI&DS)' },
+  { id: 'CSBS', label: 'Computer Science and Business Systems (CSBS)' },
+  { id: 'General / Other', label: 'Other / General Engineering' }
+];
 
 export const Settings: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
-  const { profile, semesters, resetSemester, resetEntireData } = useAcademic();
+  const { profile, semesters, resetSemester, resetEntireData, updateUserProfile } = useAcademic();
   const [selectedSem, setSelectedSem] = useState<number>(1);
   const [isResettingAll, setIsResettingAll] = useState(false);
+  const [selectedDept, setSelectedDept] = useState(profile?.department || 'CSE');
+  const [isDeptSaved, setIsDeptSaved] = useState(false);
+
+  const handleSaveDepartment = async () => {
+    await updateUserProfile({ department: selectedDept });
+    setIsDeptSaved(true);
+    setTimeout(() => setIsDeptSaved(false), 2500);
+  };
 
   const handleResetSemester = async () => {
     if (window.confirm(`Are you sure you want to reset all grades for Semester ${selectedSem}? This action is irreversible.`)) {
@@ -44,7 +65,44 @@ export const Settings: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* 1. Theme Configuration */}
+      {/* 1. Department & Branch Preference */}
+      <div className="glass-card shadow-lg p-6 border border-white/20 dark:border-darkBorder/40">
+        <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 mb-1">
+          Branch & Department <GraduationCap className="w-4 h-4 text-primary" />
+        </h3>
+        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-4">
+          Select your engineering branch. This label is reflected across your dashboard, transcripts, and profile.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <select
+            value={selectedDept}
+            onChange={(e) => setSelectedDept(e.target.value)}
+            className="glass-input flex-1 cursor-pointer text-xs py-2.5"
+          >
+            {DEPARTMENT_OPTIONS.map((dept) => (
+              <option key={dept.id} value={dept.id}>
+                {dept.label}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={handleSaveDepartment}
+            className="btn-primary px-4 py-2.5 text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+          >
+            {isDeptSaved ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-white" />
+                Saved!
+              </>
+            ) : (
+              'Save Branch'
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Theme Configuration */}
       <div className="glass-card shadow-lg p-6 border border-white/20 dark:border-darkBorder/40">
         <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 mb-1">
           Theme Preferences <Sun className="w-4 h-4 text-amber-500" />
@@ -79,7 +137,7 @@ export const Settings: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Reports & Data Exports */}
+      {/* 3. Reports & Data Exports */}
       <div className="glass-card shadow-lg p-6 border border-white/20 dark:border-darkBorder/40 space-y-4">
         <div>
           <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 mb-1">
@@ -135,13 +193,13 @@ export const Settings: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Reset Semester Data */}
+      {/* 4. Reset Semester Data */}
       <div className="glass-card shadow-lg p-6 border border-white/20 dark:border-darkBorder/40">
         <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 mb-1">
           Reset Specific Semester <RefreshCw className="w-4 h-4 text-amber-500" />
         </h3>
         <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-4">
-          Clear and reset subject grades for a selected term. Preloaded JNTUA course list structure is retained.
+          Clear and reset subject grades for a selected term.
         </p>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -164,7 +222,7 @@ export const Settings: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Danger Zone */}
+      {/* 5. Danger Zone */}
       <div className="glass-card shadow-lg p-6 border border-rose-200/50 dark:border-rose-950/20 bg-rose-50/10 dark:bg-rose-950/5">
         <h3 className="text-base font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2 mb-1">
           Danger Zone <ShieldAlert className="w-4 h-4 text-rose-500" />

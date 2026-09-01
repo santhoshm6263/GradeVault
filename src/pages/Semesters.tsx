@@ -1,195 +1,57 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAcademic } from '../context/AcademicContext';
-import { Edit2, Check, X, RefreshCw, AlertCircle, Sparkles, Upload, Camera } from 'lucide-react';
+import {
+  Edit2,
+  Check,
+  X,
+  RefreshCw,
+  AlertCircle,
+  Sparkles,
+  Upload,
+  Camera,
+  Plus,
+  Trash2,
+  BookOpen
+} from 'lucide-react';
 import { Grade } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import pdfToText from 'react-pdftotext';
-
-const parseMarksAndGrade = (subWindow: string) => {
-  let internalMarks: number | null = null;
-  let externalMarks: number | null = null;
-  let grade: Grade = '';
-
-  // Standardize hyphens/dashes and whitespace
-  const normalized = subWindow
-    .replace(/[\u2012\u2013\u2014\u2015]/g, '-') // replace different dash characters with normal hyphen
-    .replace(/\s+/g, ' '); // normalize spaces
-
-  const sanitizeResult = (intVal: number | null, extVal: number | null, gVal: string): { internalMarks: number | null; externalMarks: number | null; grade: Grade } => {
-    let finalInt = intVal;
-    let finalExt = extVal;
-    if (finalInt !== null && finalInt > 100) finalInt = null;
-    if (finalExt !== null && finalExt > 100) finalExt = null;
-    
-    let finalGrade = gVal as Grade;
-    
-    // Calculate grade from marks if marks are available
-    if (finalInt !== null || finalExt !== null) {
-      const total = (finalInt || 0) + (finalExt || 0);
-      let calculatedGrade: Grade = '';
-      if (total >= 90) calculatedGrade = 'S';
-      else if (total >= 80) calculatedGrade = 'A';
-      else if (total >= 70) calculatedGrade = 'B';
-      else if (total >= 60) calculatedGrade = 'C';
-      else if (total >= 40) calculatedGrade = 'D';
-      else if (total >= 25) calculatedGrade = 'E';
-      else calculatedGrade = 'F';
-      
-      // Respect failing or absent grades if explicitly parsed
-      if (gVal === 'F' || gVal === 'AB' || gVal === 'ABS' || gVal === 'Ab') {
-        finalGrade = gVal as Grade;
-      } else {
-        finalGrade = calculatedGrade;
-      }
-    }
-    
-    return { internalMarks: finalInt, externalMarks: finalExt, grade: finalGrade };
-  };
-
-  // Pattern 1: Standard JNTUA layout: [Internal] [External] [Total] [P/F] [Credits] [Grade]
-  // Allow numbers or AB/ABS for internal/external/total, and allow optional decimal credits
-  // E.g. "25 45 70 P 3 A" or "25 - 25 F 0 F" or "25 AB 25 F 0 F" or "AB AB 0 F 0 Ab"
-  const pattern1 = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+(\d+|AB|ABS|Ab|-)\s+([PF])\s+(\d+(?:\.\d+)?)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
-  let match = normalized.match(pattern1);
-
-  if (match) {
-    const intStr = match[1].toUpperCase();
-    const extStr = match[2].toUpperCase();
-    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
-    externalMarks = (extStr === 'AB' || extStr === 'ABS' || extStr === 'Ab' || extStr === '-') ? null : Number(extStr);
-    grade = match[6].toUpperCase() as Grade;
-    return sanitizeResult(internalMarks, externalMarks, grade);
-  }
-
-  // Pattern 1b: 2 numbers/dashes with Status & Credits (For Skill Courses/Internships with 100% internal evaluation)
-  // E.g. "90 90 P 2 S" or "90 - P 2 S"
-  const pattern1b = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+([PF])\s+(\d+(?:\.\d+)?)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
-  match = normalized.match(pattern1b);
-  if (match) {
-    const intStr = match[1].toUpperCase();
-    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
-    externalMarks = null;
-    grade = match[5].toUpperCase() as Grade;
-    return sanitizeResult(internalMarks, externalMarks, grade);
-  }
-
-  // Pattern 1c: 1 number/dash with Status & Credits
-  // E.g. "90 P 2 S" or "- F 0 F"
-  const pattern1c = /\b(\d+|AB|ABS|Ab|-)\s+([PF])\s+(\d+(?:\.\d+)?)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
-  match = normalized.match(pattern1c);
-  if (match) {
-    const intStr = match[1].toUpperCase();
-    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab' || intStr === '-') ? null : Number(intStr);
-    externalMarks = null;
-    grade = match[4].toUpperCase() as Grade;
-    return sanitizeResult(internalMarks, externalMarks, grade);
-  }
-
-  // Pattern 2: [Internal] [External] [Total] [Grade] [Credits] (no Status)
-  // E.g. "25 45 70 A 3" or "25 45 70 S 1.5"
-  const pattern2 = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b\s+(\d+(?:\.\d+)?)/i;
-  match = normalized.match(pattern2);
-  if (match) {
-    const intStr = match[1].toUpperCase();
-    const extStr = match[2].toUpperCase();
-    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
-    externalMarks = (extStr === 'AB' || extStr === 'ABS' || extStr === 'Ab' || extStr === '-') ? null : Number(extStr);
-    grade = match[4].toUpperCase() as Grade;
-    return sanitizeResult(internalMarks, externalMarks, grade);
-  }
-
-  // Pattern 2b: 2 numbers/dashes with Grade & Credits (no Status)
-  // E.g. "90 90 S 2"
-  const pattern2b = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b\s+(\d+(?:\.\d+)?)/i;
-  match = normalized.match(pattern2b);
-  if (match) {
-    const intStr = match[1].toUpperCase();
-    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
-    externalMarks = null;
-    grade = match[3].toUpperCase() as Grade;
-    return sanitizeResult(internalMarks, externalMarks, grade);
-  }
-
-  // Pattern 2c: 1 number/dash with Grade & Credits (no Status)
-  // E.g. "90 S 2"
-  const pattern2c = /\b(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b\s+(\d+(?:\.\d+)?)/i;
-  match = normalized.match(pattern2c);
-  if (match) {
-    const intStr = match[1].toUpperCase();
-    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab' || intStr === '-') ? null : Number(intStr);
-    externalMarks = null;
-    grade = match[2].toUpperCase() as Grade;
-    return sanitizeResult(internalMarks, externalMarks, grade);
-  }
-
-  // Pattern 3: [Internal] [External] [Total] [Grade] (without credits or Status)
-  // E.g. "25 45 70 A"
-  const pattern3 = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
-  match = normalized.match(pattern3);
-  if (match) {
-    const intStr = match[1].toUpperCase();
-    const extStr = match[2].toUpperCase();
-    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
-    externalMarks = (extStr === 'AB' || extStr === 'ABS' || extStr === 'Ab' || extStr === '-') ? null : Number(extStr);
-    grade = match[4].toUpperCase() as Grade;
-    return sanitizeResult(internalMarks, externalMarks, grade);
-  }
-
-  // Pattern 3b: 2 numbers/dashes & Grade
-  // E.g. "90 90 S"
-  const pattern3b = /\b(\d+|AB|ABS|Ab)\s+(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
-  match = normalized.match(pattern3b);
-  if (match) {
-    const intStr = match[1].toUpperCase();
-    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab') ? null : Number(intStr);
-    externalMarks = null;
-    grade = match[3].toUpperCase() as Grade;
-    return sanitizeResult(internalMarks, externalMarks, grade);
-  }
-
-  // Pattern 3c: 1 number/dash & Grade
-  // E.g. "90 S"
-  const pattern3c = /\b(\d+|AB|ABS|Ab|-)\s+\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
-  match = normalized.match(pattern3c);
-  if (match) {
-    const intStr = match[1].toUpperCase();
-    internalMarks = (intStr === 'AB' || intStr === 'ABS' || intStr === 'Ab' || intStr === '-') ? null : Number(intStr);
-    externalMarks = null;
-    grade = match[2].toUpperCase() as Grade;
-    return sanitizeResult(internalMarks, externalMarks, grade);
-  }
-
-  // Pattern 4: Explicit Grade mapping: "Grade: A" or similar
-  const gradeKeywordsPattern = /(?:grade|grd|val)\s*[:=-]?\s*\b(S|A|B|C|D|E|F|Ab|Y)\b/i;
-  match = normalized.match(gradeKeywordsPattern);
-  if (match) {
-    grade = match[1].toUpperCase() as Grade;
-    return { internalMarks, externalMarks, grade };
-  }
-
-  // Fallback: match all standalone Grade symbols and pick the last one
-  const allGrades = [...normalized.matchAll(/\b(S|A|B|C|D|E|F|Ab|Y)\b/ig)];
-  if (allGrades.length > 0) {
-    const lastMatch = allGrades[allGrades.length - 1];
-    grade = lastMatch[1].toUpperCase() as Grade;
-  }
-
-  return { internalMarks, externalMarks, grade };
-};
+import { parseUniversalResults } from '../services/universalResultParser';
 
 export const Semesters: React.FC = () => {
-  const { semesters, updateSubjectGrade, updateSubjectName, updateSubjectCredits, updateSubjectMarks, updateMultipleSubjects, resetSemester, academicLoading } = useAcademic();
+  const {
+    semesters,
+    updateSubjectGrade,
+    updateSubjectName,
+    updateSubjectCredits,
+    updateSubjectMarks,
+    updateMultipleSubjects,
+    addCustomSubject,
+    deleteSubject,
+    resetSemester,
+    academicLoading
+  } = useAcademic();
+
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Active semester selection (1-8)
   const [activeTab, setActiveTab] = useState(1);
   const [highlightCode, setHighlightCode] = useState<string | null>(null);
 
-  // States for renaming electives
+  // States for renaming electives/subjects
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+
+  // State for Add Subject modal
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newCourseCode, setNewCourseCode] = useState('');
+  const [newSubjectName, setNewSubjectName] = useState('');
+  const [newCredits, setNewCredits] = useState(3);
+  const [newGrade, setNewGrade] = useState<Grade>('');
+  const [newInternal, setNewInternal] = useState<number | ''>('');
+  const [newExternal, setNewExternal] = useState<number | ''>('');
 
   // Row refs for scrolling to highlights
   const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
@@ -208,7 +70,6 @@ export const Semesters: React.FC = () => {
 
     if (highlightParam) {
       setHighlightCode(highlightParam);
-      // Clean up parameter so it doesn't re-trigger
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('highlight');
       setSearchParams(newParams, { replace: true });
@@ -225,7 +86,6 @@ export const Semesters: React.FC = () => {
         });
       }, 300);
 
-      // Fade out highlight after 4 seconds
       const timer = setTimeout(() => {
         setHighlightCode(null);
       }, 4000);
@@ -247,11 +107,10 @@ export const Semesters: React.FC = () => {
 
   const currentSemData = semesters.find(s => s.semesterNumber === activeTab);
 
-  const handleGradeChange = async (courseCode: string, newGrade: Grade) => {
-    await updateSubjectGrade(activeTab, courseCode, newGrade);
+  const handleGradeChange = async (courseCode: string, newGradeVal: Grade) => {
+    await updateSubjectGrade(activeTab, courseCode, newGradeVal);
 
-    // If student gets an 'S' grade, celebrate with custom confetti!
-    if (newGrade === 'S') {
+    if (newGradeVal === 'S') {
       confetti({
         particleCount: 80,
         spread: 60,
@@ -273,10 +132,41 @@ export const Semesters: React.FC = () => {
     setEditingCode(null);
   };
 
+  const handleDeleteSubject = async (courseCode: string, subjectName: string) => {
+    if (window.confirm(`Are you sure you want to remove "${subjectName}" (${courseCode}) from Semester ${activeTab}?`)) {
+      await deleteSubject(activeTab, courseCode);
+    }
+  };
+
   const handleResetSem = async () => {
     if (window.confirm(`Are you sure you want to reset all grades for Semester ${activeTab}?`)) {
       await resetSemester(activeTab);
     }
+  };
+
+  const handleAddNewSubject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCourseCode.trim() || !newSubjectName.trim()) {
+      alert('Please provide Course Code and Subject Name');
+      return;
+    }
+
+    await addCustomSubject(activeTab, {
+      courseCode: newCourseCode.trim(),
+      subjectName: newSubjectName.trim(),
+      credits: Number(newCredits) || 3,
+      grade: newGrade,
+      internalMarks: newInternal === '' ? null : Number(newInternal),
+      externalMarks: newExternal === '' ? null : Number(newExternal)
+    });
+
+    setNewCourseCode('');
+    setNewSubjectName('');
+    setNewCredits(3);
+    setNewGrade('');
+    setNewInternal('');
+    setNewExternal('');
+    setShowAddModal(false);
   };
 
   const [importing, setImporting] = useState(false);
@@ -284,98 +174,43 @@ export const Semesters: React.FC = () => {
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrStatus, setOcrStatus] = useState<string | null>(null);
 
-  const parseAndApplyResults = async (text: string) => {
-    const updates: {
-      semesterNumber: number;
-      courseCode: string;
-      grade: Grade;
-      internalMarks: number | null;
-      externalMarks: number | null;
-    }[] = [];
+  const processExtractedText = async (text: string) => {
+    const parseRes = parseUniversalResults(text, activeTab);
 
-    semesters.forEach(sem => {
-      sem.subjects.forEach(sub => {
-        // Robust subject code matching (handles optional T/P suffix differences & case insensitivity)
-        // Clean the code to search: e.g. "23A52402a" or "23A05101T" -> base is "23A52402" or "23A05101"
-        const baseCode = sub.courseCode.replace(/[TPa-zA-Z]$/, '');
-        const isLab = sub.courseCode.endsWith('P') || /Lab|Workshop|Practical/i.test(sub.subjectName);
-        
-        let startIdx = -1;
-        let pos = text.toLowerCase().indexOf(baseCode.toLowerCase());
-        const matches: { idx: number; score: number }[] = [];
-        
-        while (pos !== -1) {
-          const fullWindow = text.substring(pos, pos + 250);
-          
-          // Truncate window at the next course code pattern to avoid boundary leak
-          const nextCodeMatch = fullWindow.substring(10).match(/\b\d{2}[A-Z]\d{5}\w*/i);
-          let windowText = fullWindow;
-          if (nextCodeMatch && nextCodeMatch.index !== undefined) {
-            windowText = fullWindow.substring(0, 10 + nextCodeMatch.index);
-          }
-          
-          const keywords = sub.subjectName
-            .toLowerCase()
-            .replace(/[^a-z0-9\s]/g, ' ')
-            .split(/\s+/)
-            .filter(w => w.length > 2 && !['and', 'the', 'for', 'with', 'through', 'basic', 'subject', 'engineering'].includes(w));
-            
-          let matchCount = 0;
-          keywords.forEach(kw => {
-            if (windowText.toLowerCase().includes(kw)) {
-              matchCount++;
-            }
-          });
-          
-          const hasLabIndicator = /lab|workshop|practical|laboratory/i.test(windowText);
-          
-          let score = matchCount;
-          if (isLab === hasLabIndicator) {
-            score += 2;
-          } else {
-            score -= 2;
-          }
-          
-          matches.push({ idx: pos, score });
-          pos = text.toLowerCase().indexOf(baseCode.toLowerCase(), pos + 1);
-        }
-        
-        matches.sort((a, b) => b.score - a.score);
-        if (matches.length > 0) {
-          startIdx = matches[0].idx;
-        }
+    if (parseRes.subjects.length === 0) {
+      alert('Could not detect any course codes or grades in the uploaded document. Please ensure this is an official JNTUA result memo or marks screenshot.');
+      return;
+    }
 
-        if (startIdx !== -1) {
-          // Search inside a window of 250 characters after the course code
-          const subText = text.substring(startIdx, startIdx + 250);
-          const parsed = parseMarksAndGrade(subText);
+    const targetSem = parseRes.detectedSemester || activeTab;
 
-          if (parsed.grade) {
-            updates.push({
-              semesterNumber: sem.semesterNumber,
-              courseCode: sub.courseCode,
-              grade: parsed.grade,
-              internalMarks: parsed.internalMarks,
-              externalMarks: parsed.externalMarks
-            });
-          }
-        }
-      });
+    // Switch to detected semester tab
+    setActiveTab(targetSem);
+    setSearchParams({ sem: String(targetSem) });
+
+    const updates = parseRes.subjects.map(s => ({
+      semesterNumber: targetSem,
+      courseCode: s.courseCode,
+      subjectName: s.subjectName,
+      credits: s.credits,
+      grade: s.grade,
+      internalMarks: s.internalMarks,
+      externalMarks: s.externalMarks,
+      totalMarks: s.totalMarks
+    }));
+
+    await updateMultipleSubjects(updates);
+
+    confetti({
+      particleCount: 150,
+      spread: 80,
+      origin: { y: 0.6 }
     });
 
-    if (updates.length > 0) {
-      await updateMultipleSubjects(updates);
-      
-      confetti({
-        particleCount: 150,
-        spread: 80,
-        origin: { y: 0.6 }
-      });
-      
-      alert(`Successfully imported results for ${updates.length} subjects!`);
-    } else {
-      alert('Could not find any matching course codes or grades in the uploaded file. Please make sure this is a valid results document.');
-    }
+    alert(
+      `🎉 Successfully imported Semester ${targetSem} results!\n\n` +
+      `Detected & synchronized ${updates.length} subjects.`
+    );
   };
 
   const handlePdfImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -387,11 +222,11 @@ export const Semesters: React.FC = () => {
 
     try {
       const text = await pdfToText(file);
-      setImportStatus('Parsing results...');
-      await parseAndApplyResults(text);
+      setImportStatus('Reading semester, marks & grades...');
+      await processExtractedText(text);
     } catch (err: any) {
       console.error('PDF Import error:', err);
-      alert('Failed to parse the PDF file. Please try again with a clean PDF.');
+      alert('Failed to parse the PDF file. Please try again with a clean PDF result sheet.');
     } finally {
       setImporting(false);
       setImportStatus(null);
@@ -422,8 +257,8 @@ export const Semesters: React.FC = () => {
         }
       );
 
-      setOcrStatus('Parsing results...');
-      await parseAndApplyResults(text);
+      setOcrStatus('Analyzing subjects & grades...');
+      await processExtractedText(text);
 
     } catch (err: any) {
       console.error('Screenshot Import error:', err);
@@ -438,16 +273,17 @@ export const Semesters: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Semester Header Card */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 glass-panel border border-slate-200/50 dark:border-darkBorder/40 rounded-3xl">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 glass-panel border border-slate-200/50 dark:border-darkBorder/40 rounded-3xl">
         <div>
           <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            Curriculum Tracker <Sparkles className="w-4 h-4 text-primary" />
+            Curriculum & Results Tracker <Sparkles className="w-4 h-4 text-primary" />
           </h2>
           <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
-            Manage your course results, view credits calculations, and edit elective choices.
+            Universal JNTUA marks calculator. Upload any result PDF/screenshot, view instant SGPA/CGPA, and manage your subjects.
           </p>
         </div>
-        <div className="flex items-center gap-4">
+
+        <div className="flex flex-wrap items-center gap-3">
           <div className="text-right">
             <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase block tracking-wider">
               Semester {activeTab} SGPA
@@ -456,7 +292,9 @@ export const Semesters: React.FC = () => {
               {currentSemData ? currentSemData.sgpa.toFixed(2) : '0.00'}
             </span>
           </div>
-          <div className="w-[1px] h-8 bg-slate-200 dark:bg-darkBorder/50" />
+
+          <div className="w-[1px] h-8 bg-slate-200 dark:bg-darkBorder/50 hidden sm:block" />
+
           <div className="text-right">
             <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase block tracking-wider">
               Credits Earned
@@ -465,19 +303,22 @@ export const Semesters: React.FC = () => {
               {currentSemData ? currentSemData.earnedCredits : 0}
             </span>
           </div>
-          <div className="w-[1px] h-8 bg-slate-200 dark:bg-darkBorder/50" />
+
+          <div className="w-[1px] h-8 bg-slate-200 dark:bg-darkBorder/50 hidden sm:block" />
+
+          {/* Import PDF Button */}
           <label 
             className={`btn-secondary px-3 py-2 text-xs flex items-center gap-1.5 ${
               (importing || ocrLoading) ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'
             }`} 
-            title="Import Results PDF"
+            title="Import Results PDF (Auto-reads Sem, Subjects, Marks, Credits & Grades)"
           >
             {importing ? (
               <span className="w-3.5 h-3.5 border-2 border-primary border-t-transparent animate-spin rounded-full" />
             ) : (
-              <Upload className="w-3.5 h-3.5" />
+              <Upload className="w-3.5 h-3.5 text-primary" />
             )}
-            {importing ? importStatus || 'Importing...' : 'Import PDF'}
+            {importing ? importStatus || 'Importing...' : 'Upload PDF'}
             <input
               type="file"
               accept="application/pdf"
@@ -486,18 +327,20 @@ export const Semesters: React.FC = () => {
               disabled={importing || ocrLoading}
             />
           </label>
+
+          {/* Upload Screenshot Button */}
           <label 
             className={`btn-secondary px-3 py-2 text-xs flex items-center gap-1.5 ${
               (importing || ocrLoading) ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'
             }`} 
-            title="Upload Results Screenshot"
+            title="Upload Results Screenshot / Image"
           >
             {ocrLoading ? (
               <span className="w-3.5 h-3.5 border-2 border-primary border-t-transparent animate-spin rounded-full" />
             ) : (
-              <Camera className="w-3.5 h-3.5" />
+              <Camera className="w-3.5 h-3.5 text-accent" />
             )}
-            {ocrLoading ? ocrStatus || 'Processing...' : 'Upload Screenshot'}
+            {ocrLoading ? ocrStatus || 'Processing...' : 'Upload Image'}
             <input
               type="file"
               accept="image/*"
@@ -506,6 +349,18 @@ export const Semesters: React.FC = () => {
               disabled={importing || ocrLoading}
             />
           </label>
+
+          {/* Add Custom Course Button */}
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="btn-primary px-3 py-2 text-xs flex items-center gap-1.5 cursor-pointer"
+            title="Add Subject to this Semester"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add Course
+          </button>
+
+          {/* Reset Semester Button */}
           <button
             onClick={handleResetSem}
             className="btn-secondary px-3 py-2 cursor-pointer text-xs"
@@ -550,15 +405,12 @@ export const Semesters: React.FC = () => {
                 <th className="px-6 py-4">Course Code</th>
                 <th className="px-6 py-4">Subject Name</th>
                 <th className="px-6 py-4 text-center">Credits</th>
-                {activeTab > 1 && (
-                  <>
-                    <th className="px-6 py-4 text-center w-24">Internal</th>
-                    <th className="px-6 py-4 text-center w-24">External</th>
-                    <th className="px-6 py-4 text-center w-24">Total</th>
-                  </>
-                )}
+                <th className="px-4 py-4 text-center w-24">Internal</th>
+                <th className="px-4 py-4 text-center w-24">External</th>
+                <th className="px-4 py-4 text-center w-24">Total</th>
                 <th className="px-6 py-4">Grade</th>
                 <th className="px-6 py-4 text-center">Earned Credit</th>
+                <th className="px-4 py-4 text-center w-12">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-darkBorder/40 text-slate-700 dark:text-slate-300">
@@ -592,7 +444,7 @@ export const Semesters: React.FC = () => {
                             value={editingName}
                             onChange={(e) => setEditingName(e.target.value)}
                             className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-darkBorder bg-white dark:bg-slate-800 text-xs focus:ring-1 focus:ring-primary focus:outline-none"
-                            placeholder="Enter custom elective name"
+                            placeholder="Enter subject name"
                           />
                           <button
                             onClick={() => saveNameEdit(sub.courseCode)}
@@ -619,15 +471,13 @@ export const Semesters: React.FC = () => {
                               {sub.subjectName}
                             </span>
                           </div>
-                          {sub.isElective && (
-                            <button
-                              onClick={() => startEditing(sub.courseCode, sub.subjectName)}
-                              className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all duration-200 cursor-pointer"
-                              title="Edit Elective Name"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => startEditing(sub.courseCode, sub.subjectName)}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all duration-200 cursor-pointer"
+                            title="Edit Subject Name"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       )}
                     </td>
@@ -639,81 +489,81 @@ export const Semesters: React.FC = () => {
                         onChange={(e) => updateSubjectCredits(activeTab, sub.courseCode, Number(e.target.value))}
                         className="glass-input py-1 px-2.5 rounded-xl font-semibold text-center text-sm focus:ring-1 cursor-pointer w-20 mx-auto block bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-darkBorder"
                       >
-                        {[0, 0.5, 1, 1.5, 2, 3].map((c) => (
+                        {[0, 0.5, 1, 1.5, 2, 3, 4, 8].map((c) => (
                           <option key={c} value={c}>
                             {c}
                           </option>
                         ))}
-                        {![0, 0.5, 1, 1.5, 2, 3].includes(sub.credits) && (
+                        {![0, 0.5, 1, 1.5, 2, 3, 4, 8].includes(sub.credits) && (
                           <option value={sub.credits}>{sub.credits}</option>
                         )}
                       </select>
                     </td>
 
-                    {/* Marks Columns for Semesters 2 to 8 */}
-                    {activeTab > 1 && (
-                      <>
-                        <td className="px-6 py-4 text-center">
-                          <input
-                            type="number"
-                            value={sub.internalMarks !== undefined && sub.internalMarks !== null ? sub.internalMarks : ''}
-                            onChange={(e) => {
-                              const val = e.target.value === '' ? null : Number(e.target.value);
-                              const maxInt = sub.courseCode === '23A99101' ? 100 : 30;
-                              const clampedVal = val !== null ? Math.max(0, Math.min(maxInt, val)) : null;
-                              updateSubjectMarks(
-                                activeTab,
-                                sub.courseCode,
-                                clampedVal,
-                                sub.courseCode === '23A99101' ? null : (sub.externalMarks !== undefined ? sub.externalMarks : null)
-                              );
-                            }}
-                            className="glass-input text-center w-20 py-1 px-2 rounded-xl focus:ring-1 focus:outline-none dark:bg-slate-800 dark:border-darkBorder"
-                            min={0}
-                            max={sub.courseCode === '23A99101' ? 100 : 30}
-                          />
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          {sub.courseCode === '23A99101' ? (
-                            <span className="text-slate-400 dark:text-slate-600 font-bold text-sm">N/A</span>
-                          ) : (
-                            <input
-                              type="number"
-                              value={sub.externalMarks !== undefined && sub.externalMarks !== null ? sub.externalMarks : ''}
-                              onChange={(e) => {
-                                const val = e.target.value === '' ? null : Number(e.target.value);
-                                const clampedVal = val !== null ? Math.max(0, Math.min(70, val)) : null;
-                                updateSubjectMarks(activeTab, sub.courseCode, sub.internalMarks !== undefined ? sub.internalMarks : null, clampedVal);
-                              }}
-                              className="glass-input text-center w-20 py-1 px-2 rounded-xl focus:ring-1 focus:outline-none dark:bg-slate-800 dark:border-darkBorder"
-                              min={0}
-                              max={70}
-                            />
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-center font-bold text-sm text-slate-800 dark:text-slate-200">
-                          {sub.totalMarks !== undefined && sub.totalMarks !== null ? sub.totalMarks : '-'}
-                        </td>
-                      </>
-                    )}
+                    {/* Internal Marks */}
+                    <td className="px-4 py-4 text-center">
+                      <input
+                        type="number"
+                        value={sub.internalMarks !== undefined && sub.internalMarks !== null ? sub.internalMarks : ''}
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? null : Number(e.target.value);
+                          updateSubjectMarks(
+                            activeTab,
+                            sub.courseCode,
+                            val,
+                            sub.externalMarks !== undefined ? sub.externalMarks : null
+                          );
+                        }}
+                        className="glass-input text-center w-16 py-1 px-2 rounded-xl focus:ring-1 focus:outline-none dark:bg-slate-800 dark:border-darkBorder"
+                        placeholder="-"
+                        min={0}
+                        max={100}
+                      />
+                    </td>
+
+                    {/* External Marks */}
+                    <td className="px-4 py-4 text-center">
+                      <input
+                        type="number"
+                        value={sub.externalMarks !== undefined && sub.externalMarks !== null ? sub.externalMarks : ''}
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? null : Number(e.target.value);
+                          updateSubjectMarks(
+                            activeTab,
+                            sub.courseCode,
+                            sub.internalMarks !== undefined ? sub.internalMarks : null,
+                            val
+                          );
+                        }}
+                        className="glass-input text-center w-16 py-1 px-2 rounded-xl focus:ring-1 focus:outline-none dark:bg-slate-800 dark:border-darkBorder"
+                        placeholder="-"
+                        min={0}
+                        max={100}
+                      />
+                    </td>
+
+                    {/* Total Marks */}
+                    <td className="px-4 py-4 text-center font-bold text-sm text-slate-800 dark:text-slate-200">
+                      {sub.totalMarks !== undefined && sub.totalMarks !== null ? sub.totalMarks : '-'}
+                    </td>
 
                     {/* Grade Select Dropdown */}
                     <td className="px-6 py-4">
                       <select
                         value={sub.grade}
                         onChange={(e) => handleGradeChange(sub.courseCode, e.target.value as Grade)}
-                        className="glass-input py-1 px-3.5 pr-8 rounded-xl font-medium focus:ring-1 cursor-pointer"
+                        className="glass-input py-1 px-3.5 pr-8 rounded-xl font-medium focus:ring-1 cursor-pointer text-xs"
                       >
                         <option value="">Grade</option>
-                        <option value="S">S (Outstanding)</option>
-                        <option value="A">A (Excellent)</option>
-                        <option value="B">B (Very Good)</option>
-                        <option value="C">C (Good)</option>
-                        <option value="D">D (Average)</option>
-                        <option value="E">E (Pass)</option>
-                        <option value="F">F (Fail)</option>
-                        <option value="Ab">Ab (Absent)</option>
-                        <option value="Y">Y (Internal College Only)</option>
+                        <option value="S">S (10 - Outstanding)</option>
+                        <option value="A">A (9 - Excellent)</option>
+                        <option value="B">B (8 - Very Good)</option>
+                        <option value="C">C (7 - Good)</option>
+                        <option value="D">D (6 - Average)</option>
+                        <option value="E">E (5 - Pass)</option>
+                        <option value="F">F (0 - Fail)</option>
+                        <option value="Ab">Ab (0 - Absent)</option>
+                        <option value="Y">Y (Internal Only)</option>
                       </select>
                     </td>
 
@@ -733,6 +583,17 @@ export const Semesters: React.FC = () => {
                         '-'
                       )}
                     </td>
+
+                    {/* Delete Action */}
+                    <td className="px-4 py-4 text-center">
+                      <button
+                        onClick={() => handleDeleteSubject(sub.courseCode, sub.subjectName)}
+                        className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                        title="Delete Course"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -745,10 +606,156 @@ export const Semesters: React.FC = () => {
           <div className="p-12 text-center text-slate-400 dark:text-slate-500">
             <AlertCircle className="w-12 h-12 mx-auto stroke-[1.25] text-slate-300 dark:text-slate-700 mb-2" />
             <h5 className="font-semibold text-sm">No subjects found for Semester {activeTab}</h5>
-            <p className="text-xs mt-1">Please reset all database logs to re-preload.</p>
+            <p className="text-xs mt-1">Upload your result memo / screenshot or click "Add Course" above to add subjects.</p>
           </div>
         )}
       </div>
+
+      {/* Add Custom Subject Modal */}
+      <AnimatePresence>
+        {showAddModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="glass-card w-full max-w-md p-6 border border-white/20 dark:border-darkBorder/40 shadow-2xl bg-white dark:bg-slate-900 rounded-3xl"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-primary" />
+                  Add Course to Semester {activeTab}
+                </h3>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddNewSubject} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    Course Code (e.g. 23A04101T)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newCourseCode}
+                    onChange={(e) => setNewCourseCode(e.target.value.toUpperCase())}
+                    placeholder="23A04101T"
+                    className="glass-input w-full py-2 px-3 text-xs uppercase"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    Subject Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newSubjectName}
+                    onChange={(e) => setNewSubjectName(e.target.value)}
+                    placeholder="Network Analysis / Electronic Devices"
+                    className="glass-input w-full py-2 px-3 text-xs"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                      Credits
+                    </label>
+                    <select
+                      value={newCredits}
+                      onChange={(e) => setNewCredits(Number(e.target.value))}
+                      className="glass-input w-full py-2 px-3 text-xs cursor-pointer"
+                    >
+                      <option value={3}>3.0 (Theory)</option>
+                      <option value={1.5}>1.5 (Lab / Workshop)</option>
+                      <option value={2}>2.0 (Skill / Humanities)</option>
+                      <option value={4}>4.0 (Internship)</option>
+                      <option value={8}>8.0 (Project)</option>
+                      <option value={0.5}>0.5 (Yoga/NSS)</option>
+                      <option value={0}>0.0 (Audit)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                      Grade (Optional)
+                    </label>
+                    <select
+                      value={newGrade}
+                      onChange={(e) => setNewGrade(e.target.value as Grade)}
+                      className="glass-input w-full py-2 px-3 text-xs cursor-pointer"
+                    >
+                      <option value="">None</option>
+                      <option value="S">S (10)</option>
+                      <option value="A">A (9)</option>
+                      <option value="B">B (8)</option>
+                      <option value="C">C (7)</option>
+                      <option value="D">D (6)</option>
+                      <option value="E">E (5)</option>
+                      <option value="F">F (0)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                      Internal Marks
+                    </label>
+                    <input
+                      type="number"
+                      value={newInternal}
+                      onChange={(e) => setNewInternal(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="e.g. 28"
+                      className="glass-input w-full py-2 px-3 text-xs"
+                      min={0}
+                      max={100}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                      External Marks
+                    </label>
+                    <input
+                      type="number"
+                      value={newExternal}
+                      onChange={(e) => setNewExternal(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="e.g. 45"
+                      className="glass-input w-full py-2 px-3 text-xs"
+                      min={0}
+                      max={100}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="btn-secondary px-4 py-2 text-xs cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary px-4 py-2 text-xs cursor-pointer"
+                  >
+                    Add Course
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -130,7 +130,7 @@ export const GlobalSearch: React.FC = () => {
           <BookOpen className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
           <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">No subjects found</h4>
           <p className="text-xs text-slate-400 dark:text-slate-500">
-            No matches for "{query}" under JNTUA R23 CSE curriculum.
+            No matches found for "{query}".
           </p>
         </div>
       )}

@@ -32,6 +32,8 @@ export interface UserProfile {
   classification: string;
   earnedCredits: number;
   totalCredits: number;
+  department?: string;
+  regulation?: string;
 }
 
 export interface ActivityLog {

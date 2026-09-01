@@ -49,7 +49,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               GradeVault
             </h1>
             <span className="text-[10px] font-semibold text-primary dark:text-primary-400 tracking-wider uppercase">
-              JNTUA R23 CSE
+              JNTUA R23 • {profile?.department || 'ALL DEPTS'}
             </span>
           </div>
         </div>
@@ -142,7 +142,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     GradeVault
                   </h1>
                   <span className="text-[9px] font-semibold text-primary tracking-wider uppercase">
-                    JNTUA R23 CSE
+                    JNTUA R23 • {profile?.department || 'ALL DEPTS'}
                   </span>
                 </div>
               </div>
