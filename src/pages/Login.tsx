@@ -83,7 +83,7 @@ export const Login: React.FC = () => {
               Official Syllabus Portal
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal">
-              Universal tracker for all **JNTUA R23 Departments** (CSE, ECE, EEE, MECH, CIVIL, IT, AI&DS). Upload your result PDF or screenshot for instant SGPA/CGPA calculations.
+              Universal tracker for all **JNTUA R23 Departments** (CSE, ECE, EEE, MECH, CIVIL, IT, CSE-DS). Upload your result PDF or screenshot for instant SGPA/CGPA calculations.
             </p>
           </div>
 

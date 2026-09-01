@@ -23,7 +23,7 @@ const DEPARTMENT_OPTIONS = [
   { id: 'CIVIL', label: 'Civil Engineering (CIVIL)' },
   { id: 'IT', label: 'Information Technology (IT)' },
   { id: 'CSE (AI&ML)', label: 'CSE - Artificial Intelligence & Machine Learning' },
-  { id: 'AI&DS', label: 'Artificial Intelligence and Data Science (AI&DS)' },
+  { id: 'CSE (Data Science)', label: 'CSE - Data Science (CSE-DS)' },
   { id: 'CSBS', label: 'Computer Science and Business Systems (CSBS)' },
   { id: 'General / Other', label: 'Other / General Engineering' }
 ];

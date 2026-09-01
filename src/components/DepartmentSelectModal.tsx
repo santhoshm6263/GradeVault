@@ -100,11 +100,11 @@ const DEPARTMENTS: DepartmentOption[] = [
     bgColor: 'bg-purple-500/10'
   },
   {
-    id: 'AI&DS',
-    name: 'Artificial Intelligence & Data Science',
-    shortCode: 'AI&DS',
+    id: 'CSE (Data Science)',
+    name: 'CSE (Data Science)',
+    shortCode: 'CSE-DS',
     group: 'Group A',
-    description: 'Data Analytics, Big Data, Predictive Modeling, Deep Learning & Business Intelligence',
+    description: 'Data Analytics, Big Data, Machine Learning, Predictive Modeling & Business Intelligence',
     icon: Database,
     color: 'text-rose-500',
     bgColor: 'bg-rose-500/10'
